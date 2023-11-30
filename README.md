@@ -1,1 +1,1 @@
-# BCDT (BERT Clustering via Dot Product)
+# BCDP (BERT Clustering via Dot Product)
