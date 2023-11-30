@@ -1,1 +1,1 @@
-# NLP_Project
+# BCDT (BERT Clustering via Dot Product)
