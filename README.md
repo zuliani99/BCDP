@@ -1,4 +1,4 @@
-# BCDP (BERT Clustering via Dot Product)
+# Clustering BERT Eembedding via Dot Product (CBERTdp)
 
 ## Installation
 ```
