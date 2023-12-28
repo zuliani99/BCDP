@@ -1,11 +1,14 @@
 
 from tqdm import tqdm
+from dataset import CustomTextDataset
 
 from utils import get_embeddings
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import DataLoader, random_split
+
 
 
 class SelfAttention(nn.Module):
@@ -63,10 +66,8 @@ class LayerAggregation():
 		self.patience = patience
 		self.epochs = epochs
 		self.embedding_dim = 768 * 12
-
-		#self.train_dl =
-		#self.val_dl =
-		#self.test_dl =
+  
+		self.best_check_filename = 'app/chekpoint/layer_aggregation.pth.tar'
 	
 		
 
@@ -183,8 +184,27 @@ class LayerAggregation():
 
 
 	def run(self):
-		self.fit()
-		self.evaluate(self.test_dl)
-		get_embeddings(self)
-		# run clusering
+		for ds_name, dataset in self.datasets_dict.items():
+			print(f'--------------- {ds_name} ---------------')
+			
+			train_ds = CustomTextDataset(dataset['train'], self.tokenizer)
+			test_ds = CustomTextDataset(dataset['test'], self.tokenizer)
+   
+			train_size = len(train_ds)
+
+			val_size = int(train_size * 0.2)
+			train_size -= val_size
+
+			train_data, val_data = random_split(train_ds, [int(train_size), int(val_size)])
+    
+			self.train_dl = DataLoader(train_data, batch_size=128, shuffle=True, num_workers=2)
+			self.val_dl = DataLoader(val_data, batch_size=128, shuffle=True, num_workers=2)
+   
+			self.test_dl = DataLoader(test_ds, batch_size=128, shuffle=True, num_workers=2)
+   
+			self.fit()
+			self.evaluate(self.test_dl)
+			get_embeddings(self)
+   
+			# run clusering
   

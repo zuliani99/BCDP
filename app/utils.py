@@ -9,7 +9,7 @@ def get_datasets():
 	return {
      	'imdb': load_dataset('imdb'), 
         'sst2': load_dataset('sst2'),
-        'r_t': load_dataset('rotten_tomatoes')
+        'y_p': load_dataset('yelp_polarity')
     }
  
 def to_npy(datasets_dict, splits_perc, strategy_name):

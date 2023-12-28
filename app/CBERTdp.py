@@ -3,9 +3,9 @@
 from utils import accuracy_score, get_datasets
 from transformers import BertTokenizer, BertModel
 
-from MainApproch import MainApproch
-from LayerWise import LayerWise
-from LayerAggregation import LayerAggregation
+from approaches.MainApproch import MainApproch
+from approaches.LayerWise import LayerWise
+from approaches.LayerAggregation import LayerAggregation
 
 import torch
 import torch.nn as nn
@@ -42,7 +42,11 @@ def main():
 		epochs = 10
     )
  
-	methods = [main_approach, layer_wise, layer_aggregation]
+	methods = [
+		main_approach,
+		#layer_wise,
+		layer_aggregation
+	]
  
 	for method in methods:
 		method.run()
