@@ -1,4 +1,6 @@
 
+from torch.nn.utils.rnn import pad_sequence
+
 from tqdm import tqdm
 import torch
 import numpy as np
@@ -38,7 +40,7 @@ def get_embeddings(method):
 
 		for ds_type in ['train', 'test']:
        
-			path = f'embeddings/{ds_name}/{method.__class__.__name__}/{ds_type}'
+			path = f'app/embeddings/{ds_name}/{method.__class__.__name__}/{ds_type}'
 
 			print(f'------------ Obtaning the embeddings for {ds_name} - {ds_type} ------------')
 
@@ -49,7 +51,7 @@ def get_embeddings(method):
 
 			for idx, (strat_range, end_range) in enumerate(range_splits):
 
-				embeddings_tensor = torch.empty((0,method.embedding_dim)).to(method.device)
+				embeddings_tensor = torch.empty((0, method.embedding_dim)).to(method.device)
 
 				torch.save(embeddings_tensor, f'{path}_{idx}.pt')
 
@@ -76,3 +78,14 @@ def get_embeddings(method):
 
 
 		to_npy(method.datasets_dict, method.embedding_split_perc, method.__class__.__name__)
+
+
+
+def collate_fn(batch):
+    #print(batch)
+    input_ids = pad_sequence([item[0]['input_ids'] for item in batch], batch_first=True, padding_value=0)
+    token_type_ids = pad_sequence([item[0]['token_type_ids'] for item in batch], batch_first=True, padding_value=0)
+    attention_mask = pad_sequence([item[0]['attention_mask'] for item in batch], batch_first=True, padding_value=0)
+    labels = torch.tensor([item[1] for item in batch])
+
+    return {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}, labels

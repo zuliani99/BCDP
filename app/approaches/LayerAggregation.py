@@ -2,7 +2,7 @@
 from tqdm import tqdm
 from dataset import CustomTextDataset
 
-from utils import get_embeddings
+from utils import collate_fn, get_embeddings
 
 import torch
 import torch.nn as nn
@@ -41,20 +41,20 @@ class Bert_Layer_aggregation(nn.Module):
 		
 		
 	def forward(self, x):
-		outputs = self.model(x)
+		outputs = self.pre_trained_bert(x)
 		hidden_states = outputs[2]
 		aggregated_tensor = torch.cat([h_state[:, 0, :] for h_state in hidden_states[1:]], dim=1)
 		attention = self.self_attention_layer(aggregated_tensor)
 		return self.softmax(self.output_linear(attention)), attention
 		
 	def freeze_layers(self):
-		for param in self.model.parameters():
+		for param in self.pre_trained_bert.parameters():
 			param.requires_grad = False
 		
 
 
 class LayerAggregation():
-	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn, optimizer, patience, epochs):
+	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs):
 		self.device = device
 		self.datasets_dict = datasets_dict
 		self.model = Bert_Layer_aggregation(model).to(device)
@@ -62,7 +62,7 @@ class LayerAggregation():
 		self.embedding_split_perc = embedding_split_perc
 		self.loss_fn = loss_fn
 		self.score_fn = score_fn
-		self.optimizer = optimizer
+		self.optimizer = torch.optim.AdamW(model.parameters())
 		self.patience = patience
 		self.epochs = epochs
 		self.embedding_dim = 768 * 12
@@ -129,17 +129,17 @@ class LayerAggregation():
 
 			pbar = tqdm(self.train_dl, total = len(self.train_dl), leave=False)
 
-			for texts, labels in pbar:
+			for dictionary, labels in pbar:
+				print(dictionary, labels)
 								
 				# zero the parameter gradients
 				self.optimizer.zero_grad()
 
 				# get the inputs; data is a list of [inputs, labels]
-				texts, labels = texts.to(self.device), labels.to(self.device)
-    
-				texts = self.tokenizer(texts, return_tensors='pt', truncation=True, padding=True).to(self.device)
-				
-				outputs, _ = self.model(texts)
+				#texts, labels = texts.to(self.device), labels.to(self.device)
+    				
+				outputs, _ = self.model(dictionary)
+				#labels = dictionary['label']
 				loss = self.loss_fn(outputs, labels)
 				
 				loss.backward()
@@ -197,10 +197,10 @@ class LayerAggregation():
 
 			train_data, val_data = random_split(train_ds, [int(train_size), int(val_size)])
     
-			self.train_dl = DataLoader(train_data, batch_size=128, shuffle=True, num_workers=2)
-			self.val_dl = DataLoader(val_data, batch_size=128, shuffle=True, num_workers=2)
+			self.train_dl = DataLoader(train_data, batch_size=128, shuffle=True, num_workers=2, collate_fn=collate_fn)
+			self.val_dl = DataLoader(val_data, batch_size=128, shuffle=True, num_workers=2, collate_fn=collate_fn)
    
-			self.test_dl = DataLoader(test_ds, batch_size=128, shuffle=True, num_workers=2)
+			self.test_dl = DataLoader(test_ds, batch_size=128, shuffle=True, num_workers=2, collate_fn=collate_fn)
    
 			self.fit()
 			self.evaluate(self.test_dl)
