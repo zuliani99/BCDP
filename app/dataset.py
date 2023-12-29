@@ -10,11 +10,18 @@ class CustomTextDataset(Dataset):
         return len(self.vocab)
     
     def __getitem__(self, idx): 
-        encoding = self.tokenizer(
-            self.vocab[idx]['text'], return_tensors='pt', truncation=True, padding=True
-            )
-        #input_ids = encoding['input_ids'].squeeze()
-        #attention_mask = encoding['attention_mask'].squeeze()
+        encoding = self.tokenizer.encode_plus(
+            self.vocab[idx]['text'],
+            truncation=True,
+            return_token_type_ids=False,
+            return_attention_mask=True,
+            return_tensors='pt', padding=True
+        )
+        input_ids = encoding['input_ids'].squeeze()
+        attention_mask = encoding['attention_mask'].squeeze()
 
         #return #{'input_ids': input_ids, 'attention_mask': attention_mask, 'label': self.vocab[idx]['label']}
-        return encoding, self.vocab[idx]['label']
+        
+        
+
+        return {'input_ids': input_ids, 'attention_mask': attention_mask}, self.vocab[idx]['label']

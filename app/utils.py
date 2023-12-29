@@ -29,7 +29,11 @@ def to_npy(datasets_dict, splits_perc, strategy_name):
 			np.save(f'embeddings/{ds_name}/{strategy_name}/{ds_type}.npy', to_array)
    
 def accuracy_score(output, label):
+    #print(output)
+    #print(torch.softmax(output, dim=1))
     output_class = torch.argmax(torch.softmax(output, dim=1), dim=1)
+    #print(output_class)
+    #print(label)
     return (output_class == label).sum().item()/len(output)
 
 
@@ -65,8 +69,10 @@ def get_embeddings(method):
 				for text in tqdm(ds_dict, total = len(ds_dict), leave=False, desc=f'Working on split {idx}'):
 
 					embeddings_tensor = torch.load(f'{path}_{idx}.pt')
-					encoded_text = method.tokenizer(text, return_tensors='pt', truncation=True, padding=True).to(method.device)
+					#encoded_text = method.tokenizer(text, return_tensors='pt', truncation=True, padding=True).to(method.device)
 					
+					encoded_text = method.tokenizer(text, truncation=True, return_token_type_ids=False, return_attention_mask=True, return_tensors='pt', padding=True).to(method.device)
+
 					if method.__class__.__name__ == 'LayerAggregation':
 						_, embeds = method.model(encoded_text)
 					else:
@@ -84,8 +90,9 @@ def get_embeddings(method):
 def collate_fn(batch):
     #print(batch)
     input_ids = pad_sequence([item[0]['input_ids'] for item in batch], batch_first=True, padding_value=0)
-    token_type_ids = pad_sequence([item[0]['token_type_ids'] for item in batch], batch_first=True, padding_value=0)
     attention_mask = pad_sequence([item[0]['attention_mask'] for item in batch], batch_first=True, padding_value=0)
     labels = torch.tensor([item[1] for item in batch])
 
-    return {'input_ids': input_ids, 'token_type_ids': token_type_ids, 'attention_mask': attention_mask}, labels
+    #print(input_ids.shape, attention_mask.shape, labels.shape)
+
+    return {'input_ids': input_ids, 'attention_mask': attention_mask}, labels

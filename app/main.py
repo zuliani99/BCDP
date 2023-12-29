@@ -30,6 +30,7 @@ def main():
 	layer_wise = LayerWise(device, datasets_dict, model, tokenizer, embedding_split_perc)
 	layer_aggregation = LayerAggregation(
 		device=device,
+		batch_size=16,
 		datasets_dict=datasets_dict,
   		model=model,
     	tokenizer=tokenizer,
