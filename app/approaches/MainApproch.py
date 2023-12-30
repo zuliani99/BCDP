@@ -23,5 +23,6 @@ class MainApproch():
 
   
 	def run(self):
-		get_embeddings(self)
-		# run clusering
+		for ds_name, dataset in self.datasets_dict.items():
+			get_embeddings(self, ds_name, dataset)
+			# run clusering

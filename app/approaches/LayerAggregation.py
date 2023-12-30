@@ -110,18 +110,21 @@ class LayerAggregation():
 		self.embedding_split_perc = embedding_split_perc
 		self.loss_fn = loss_fn
 		self.score_fn = score_fn
-		self.optimizer = torch.optim.AdamW(model.parameters(), lr = 1e-5, eps = 1e-8)
+		self.optimizer = torch.optim.AdamW(model.parameters(), lr = 1e-5)#, lr = 1e-5, eps = 1e-8)
 		self.patience = patience
 		self.epochs = epochs
 		self.embedding_dim = 768 * 12
   
-		self.best_check_filename = 'app/chekpoint/layer_aggregation.pth.tar'
-	
+		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
+  
+		self.best_check_filename = 'app/chekpoint'
+		self.init_check_filename = 'app/checkpoints/init_LA.pth.tar'
+
 		
 
 	def __save_checkpoint(self, filename):
 
-		checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict() }
+		checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict() }
 		torch.save(checkpoint, filename)
 
 
@@ -131,6 +134,8 @@ class LayerAggregation():
 		checkpoint = torch.load(filename, map_location=self.device)
 		self.model.load_state_dict(checkpoint['state_dict'])
 		self.optimizer.load_state_dict(checkpoint['optimizer'])
+		self.scheduler.load_state_dict(checkpoint['scheduler'])
+  
 
 
 
@@ -164,8 +169,21 @@ class LayerAggregation():
    
 		return val_accuracy, val_loss
 
+	def test(self):
+		test_accuracy, test_loss = self.evaluate(self.test_dl)
 
-	def fit(self):
+		print('\nTESTING RESULTS -> test_accuracy: {:.6f}, test_loss: {:.6f} \n'.format(test_accuracy, test_loss))
+
+		return test_accuracy, test_loss
+
+
+
+	def fit(self, ds_name):
+
+		self.__load_checkpoint(self.init_check_filename)
+
+		check_best_path = f'{self.best_check_filename}/{ds_name}_LA.pth.tar'
+    
 		self.model.train()
 		
 		best_val_loss = float('inf')
@@ -202,6 +220,9 @@ class LayerAggregation():
 			train_accuracy /= len(self.train_dl)
 			train_loss /= len(self.train_dl)
    
+			# scheduler step
+			self.scheduler.step(train_loss)
+   
 
 			# Validation step
 			val_accuracy, val_loss = self.evaluate(self.val_dl, epoch + 1, self.epochs)
@@ -213,7 +234,7 @@ class LayerAggregation():
 			if(val_loss < best_val_loss):
 				best_val_loss = val_accuracy
 				actual_patience = 0
-				self.__save_checkpoint(self.best_check_filename)
+				self.__save_checkpoint(check_best_path)
 			else:
 				actual_patience += 1
 				if actual_patience >= self.patience:
@@ -222,22 +243,16 @@ class LayerAggregation():
 					break
 								
 
-		self.__load_checkpoint(self.best_check_filename)
+		self.__load_checkpoint(check_best_path)
 
 		print('Finished Training\n')
+  
 
 
 	def run(self):
+     
 		for ds_name, dataset in self.datasets_dict.items():
 			print(f'--------------- {ds_name} ---------------')
-			'''max_word = 0
-			for text in dataset['train']['text']:
-				s = text.split(' ')
-				if len(s) > max_word: 
-					print(max_word)
-					max_word = len(s)
-
-			print(max_word)'''
 			
 			train_ds = CustomTextDataset(dataset['train'], self.tokenizer)
 			test_ds = CustomTextDataset(dataset['test'], self.tokenizer)
@@ -254,9 +269,11 @@ class LayerAggregation():
    
 			self.test_dl = DataLoader(test_ds, batch_size=self.batch_size, shuffle=True, num_workers=2, collate_fn=collate_fn)
    
-			self.fit()
-			self.evaluate(self.test_dl)
-			get_embeddings(self)
+			self.fit(ds_name)
+			#test_accuracy, test_loss = self.test(self.test_dl)
+			_, _ = self.test(self.test_dl)
+   
+			get_embeddings(self, ds_name, dataset)
    
 			
 			# run clusering
