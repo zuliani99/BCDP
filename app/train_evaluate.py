@@ -3,12 +3,12 @@ from get_embeddings import GetEmbeddings
 import torch
 
 class Train_Evaluate(GetEmbeddings):
-	def __init__(self, name, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embedding_dim):
+	def __init__(self, name, device, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embedding_dim):
 		GetEmbeddings.__init__(self, name, embedding_split_perc,
                          device, tokenizer, model.to(device), embedding_dim)
   
 		self.batch_size = batch_size
-		self.datasets_dict = datasets_dict
+		#self.datasets_dict = datasets_dict
 		self.loss_fn = loss_fn
 		self.score_fn = score_fn
 		self.optimizer = torch.optim.Adam(model.parameters())#torch.optim.AdamW(model.parameters(), lr = 1e-5)#, lr = 1e-5, eps = 1e-8)

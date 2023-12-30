@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from utils import accuracy_score, get_datasets
+from utils import accuracy_score, get_dataloaders, get_datasets
 from transformers import BertTokenizer, BertModel
 
 from approaches.MainApproch import MainApproch
@@ -8,6 +8,8 @@ from approaches.LayerWise import LayerWise
 from approaches.LayerAggregation import LayerAggregation
 
 from competitros.BertLinears import BertLinears
+from competitros.BertLSTM import BertLSTM
+from competitros.BertGRU import BertGRU
 
 import torch
 import torch.nn as nn
@@ -20,20 +22,24 @@ def main():
     
 	embedding_split_perc = 0.1
     
-	datasets_dict = get_datasets()
+	batch_size = 64
 
 	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 	model = BertModel.from_pretrained("bert-base-uncased").to(device)
+ 
+	datasets_dict = get_datasets()
+ 
+	dataloaders = get_dataloaders(datasets_dict, tokenizer, batch_size)
 
 	loss_fn = nn.CrossEntropyLoss()
 
 	# our approaches
-	main_approach = MainApproch(device, datasets_dict, model, tokenizer, embedding_split_perc)
-	layer_wise = LayerWise(device, datasets_dict, model, tokenizer, embedding_split_perc)
+	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
+	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
 	layer_aggregation = LayerAggregation(
 		device=device,
-		batch_size=16,
-		datasets_dict=datasets_dict,
+		batch_size=batch_size,
+		dataloaders=dataloaders,
   		model=model,
     	tokenizer=tokenizer,
      	embedding_split_perc=embedding_split_perc,
@@ -48,8 +54,8 @@ def main():
 	# competitors
 	bert_linears = BertLinears(
       	device=device,
-		batch_size=16,
-		datasets_dict=datasets_dict,
+		batch_size=batch_size,
+		dataloaders=dataloaders,
   		model=model,
     	tokenizer=tokenizer,
      	embedding_split_perc=embedding_split_perc,
@@ -58,6 +64,50 @@ def main():
 		patience=3,
 		epochs=10,
   		dim_embedding=None
+  	)
+ 
+	bert_lstm = BertLSTM(
+      	device=device,
+		batch_size=batch_size,
+		dataloaders=dataloaders,
+  		model=model,
+    	tokenizer=tokenizer,
+     	embedding_split_perc=embedding_split_perc,
+      	loss_fn=loss_fn,
+		score_fn=accuracy_score,
+		patience=3,
+		epochs=10,
+  		dim_embedding=None,
+		bi_directional=False
+  	)
+ 
+	bert_lstm_bi = BertLSTM(
+      	device=device,
+		batch_size=batch_size,
+		dataloaders=dataloaders,
+  		model=model,
+    	tokenizer=tokenizer,
+     	embedding_split_perc=embedding_split_perc,
+      	loss_fn=loss_fn,
+		score_fn=accuracy_score,
+		patience=3,
+		epochs=10,
+  		dim_embedding=None,
+		bi_directional=True
+  	)
+ 
+	bert_gru = BertGRU(
+      	device=device,
+		batch_size=batch_size,
+		dataloaders=dataloaders,
+  		model=model,
+    	tokenizer=tokenizer,
+     	embedding_split_perc=embedding_split_perc,
+      	loss_fn=loss_fn,
+		score_fn=accuracy_score,
+		patience=3,
+		epochs=10,
+  		dim_embedding=None,
   	)
  
  
@@ -69,7 +119,10 @@ def main():
 		layer_aggregation,
 
 		# competitors
-		#bert_linears,
+		bert_linears,
+		bert_lstm,
+		bert_lstm_bi,
+		bert_gru
   
 		# baselines
 	]
