@@ -1,5 +1,5 @@
 
-from app.dataset import CustomTextDataset
+from dataset import CustomTextDataset
 
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, random_split

@@ -1,5 +1,5 @@
 
-from train_evaluate import Train_Evaluaten
+from train_evaluate import Train_Evaluate
 
 import torch
 import torch.nn as nn
