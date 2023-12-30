@@ -1,5 +1,5 @@
 
-from utils import get_embeddings
+from app.get_embeddings import GetEmbeddings
 import torch.nn as nn
 
 class Bert(nn.Module):
@@ -12,17 +12,14 @@ class Bert(nn.Module):
 		
 	
 
-class MainApproch():
+class MainApproch(GetEmbeddings):
 	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc):
-		self.device = device
+		GetEmbeddings.__init__(self.__class__.__name__, embedding_split_perc,
+                         device, tokenizer, Bert(model).to(device), embedding_dim = 768)
 		self.datasets_dict = datasets_dict
-		self.model = Bert(model).to(device)
-		self.tokenizer = tokenizer
-		self.embedding_split_perc = embedding_split_perc
-		self.embedding_dim = 768
 
   
 	def run(self):
 		for ds_name, dataset in self.datasets_dict.items():
-			get_embeddings(self, ds_name, dataset)
+			self.get_embeddings(ds_name, dataset)
 			# run clusering

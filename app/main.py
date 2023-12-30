@@ -7,6 +7,8 @@ from approaches.MainApproch import MainApproch
 from approaches.LayerWise import LayerWise
 from approaches.LayerAggregation import LayerAggregation
 
+from competitros.BertLinears import BertLinears
+
 import torch
 import torch.nn as nn
 
@@ -25,7 +27,7 @@ def main():
 
 	loss_fn = nn.CrossEntropyLoss()
 
- 
+	# our approaches
 	main_approach = MainApproch(device, datasets_dict, model, tokenizer, embedding_split_perc)
 	layer_wise = LayerWise(device, datasets_dict, model, tokenizer, embedding_split_perc)
 	layer_aggregation = LayerAggregation(
@@ -38,13 +40,37 @@ def main():
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
 		patience = 3,
-		epochs = 10
+		epochs = 10,
+		dim_embedding = 768 * 12
     )
  
+	
+	# competitors
+	bert_linears = BertLinears(
+      	device=device,
+		batch_size=16,
+		datasets_dict=datasets_dict,
+  		model=model,
+    	tokenizer=tokenizer,
+     	embedding_split_perc=embedding_split_perc,
+      	loss_fn=loss_fn,
+		score_fn=accuracy_score,
+		patience = 3,
+		epochs = 10
+  	)
+ 
+ 
+ 
 	methods = [
-		#main_approach,
-		#layer_wise,
-		layer_aggregation
+		# our approaches
+		main_approach,
+		layer_wise,
+		layer_aggregation,
+
+		# competitors
+		#bert_linears,
+  
+		# baselines
 	]
  
 	for method in methods:
