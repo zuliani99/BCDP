@@ -12,6 +12,6 @@ date
 
 conda activate nlp_env
 
-python CBERTdp.py
+python app/CBERTdp.py
 
 date
