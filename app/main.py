@@ -39,9 +39,9 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience = 3,
-		epochs = 10,
-		dim_embedding = 768 * 12
+		patience=3,
+		epochs=10,
+		dim_embedding=768 * 12
     )
  
 	
@@ -55,8 +55,8 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience = 3,
-		epochs = 10
+		patience=3,
+		epochs=10
   	)
  
  

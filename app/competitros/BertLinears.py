@@ -59,4 +59,4 @@ class BertLinears(Train_Evaluate):
 			test_accuracy, test_loss = self.test(test_dl)
    
 			# write results
-			# write_csv(test_accuracy, test_loss)
+			# write_csv(self.__class__.__name__, ds_name, test_accuracy, test_loss)

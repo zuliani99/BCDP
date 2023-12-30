@@ -31,8 +31,12 @@ class GetEmbeddings():
 			range_splits = [(idx, len_ds) if idx + dim_split > len_ds else (idx, idx + dim_split) for idx in range(0, len_ds, dim_split)]
 
 			for idx, (strat_range, end_range) in enumerate(range_splits):
-
-				embeddings_tensor = torch.empty((0, self.embedding_dim)).to(self.device)
+				
+				if isinstance(self.embedding_dim, int):
+					embeddings_tensor = torch.empty((0, self.embedding_dim)).to(self.device)
+				else:
+					embeddings_tensor = torch.empty((0, self.embedding_dim[0], self.embedding_dim[1])).to(self.device)
+     
 
 				torch.save(embeddings_tensor, f'{path}_{idx}.pt')
 

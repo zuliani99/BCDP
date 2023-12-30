@@ -2,9 +2,9 @@
 from app.get_embeddings import GetEmbeddings
 import torch.nn as nn
 
-class Bert(nn.Module):
+class BertLastLayer(nn.Module):
 	def __init__(self, bert):
-		super(Bert, self).__init__()
+		super(BertLastLayer, self).__init__()
 		self.pre_trained_bert = bert
 		
 	def forward(self, x):
@@ -15,7 +15,7 @@ class Bert(nn.Module):
 class MainApproch(GetEmbeddings):
 	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc):
 		GetEmbeddings.__init__(self.__class__.__name__, embedding_split_perc,
-                         device, tokenizer, Bert(model).to(device), embedding_dim = 768)
+                         device, tokenizer, BertLastLayer(model).to(device), embedding_dim = 768)
 		self.datasets_dict = datasets_dict
 
   
