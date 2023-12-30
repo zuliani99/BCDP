@@ -1,5 +1,5 @@
 
-from app.get_embeddings import GetEmbeddings
+from get_embeddings import GetEmbeddings
 import torch.nn as nn
 
 class BertLastLayer(nn.Module):
@@ -14,8 +14,8 @@ class BertLastLayer(nn.Module):
 
 class MainApproch(GetEmbeddings):
 	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc):
-		GetEmbeddings.__init__(self.__class__.__name__, embedding_split_perc,
-                         device, tokenizer, BertLastLayer(model).to(device), embedding_dim = 768)
+		GetEmbeddings.__init__(self, 'MainApproch', embedding_split_perc,
+                         device, tokenizer, BertLastLayer(model).to(device), 768)
 		self.datasets_dict = datasets_dict
 
   

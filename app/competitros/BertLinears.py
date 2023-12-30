@@ -26,8 +26,8 @@ class BertLinearLayer(nn.Module):
 class BertLinears(Train_Evaluate):
 	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
 						patience, epochs, batch_size, dim_embedding):
-		Train_Evaluate.__init__(device, datasets_dict,
-						BertLinearLayer(model),
+		Train_Evaluate.__init__(self, 'BertLinears', device, datasets_dict,
+						BertLinearLayer(model, n_classes=2),
 						tokenizer, embedding_split_perc, loss_fn, score_fn,
 						patience, epochs, batch_size, dim_embedding)
 		

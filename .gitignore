@@ -2,3 +2,7 @@
 app/__pycache__/
 
 *.pyc
+*.npy
+*.pt
+*.log
+*.tar

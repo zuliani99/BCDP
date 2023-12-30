@@ -11,15 +11,15 @@ class BertLayersWise(nn.Module):
 	def forward(self, x):
 		outputs = self.pre_trained_bert(**x, output_hidden_states=True)
 		hidden_states_batches = outputs[2]
-		# (1,12,728)
-		return torch.cat([torch.unsqueeze(h_state[:,0,:], dim=0) for h_state in hidden_states_batches[1:]], dim=0)
+		# (1,728*12)
+		return torch.cat([h_state[:,0,:] for h_state in hidden_states_batches[1:]], dim=1)
 
 
 class LayerWise(GetEmbeddings):
 	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc):
-		GetEmbeddings.__init__(self.__class__.__name__, embedding_split_perc,
+		GetEmbeddings.__init__(self, 'LayerWise', embedding_split_perc,
                          device, tokenizer, BertLayersWise(model).to(device),
-                         embedding_dim = (12, 768))
+                         embedding_dim = 12 * 768)
 		self.datasets_dict = datasets_dict
 
   

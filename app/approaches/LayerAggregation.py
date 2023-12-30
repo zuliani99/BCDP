@@ -1,5 +1,5 @@
 
-from app.train_evaluate import Train_Evaluate
+from train_evaluate import Train_Evaluate
 from dataset import CustomTextDataset
 
 from utils import collate_fn
@@ -103,8 +103,8 @@ class Bert_Layer_aggregation(nn.Module):
 class LayerAggregation(Train_Evaluate):
 	def __init__(self, device, datasets_dict, model, tokenizer,
               	embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, dim_embedding):
-		Train_Evaluate.__init__(device, datasets_dict,
-                        Bert_Layer_aggregation(model, self.batch_size),
+		Train_Evaluate.__init__(self, 'LayerAggregation', device, datasets_dict,
+                        Bert_Layer_aggregation(model, batch_size),
                         tokenizer, embedding_split_perc, loss_fn, score_fn,
                         patience, epochs, batch_size, dim_embedding) 
 

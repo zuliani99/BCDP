@@ -3,9 +3,9 @@ from get_embeddings import GetEmbeddings
 import torch
 
 class Train_Evaluate(GetEmbeddings):
-	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embedding_dim):
-		GetEmbeddings.__init__(self.__class__.__name__, embedding_split_perc,
-                         device, tokenizer, model.to(self.device), embedding_dim)
+	def __init__(self, name, device, datasets_dict, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embedding_dim):
+		GetEmbeddings.__init__(self, name, embedding_split_perc,
+                         device, tokenizer, model.to(device), embedding_dim)
   
 		self.batch_size = batch_size
 		self.datasets_dict = datasets_dict
@@ -17,7 +17,7 @@ class Train_Evaluate(GetEmbeddings):
   
 		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
   
-		self.best_check_filename = 'app/chekpoint'
+		self.best_check_filename = 'app/checkpoints'
 		self.init_check_filename = 'app/checkpoints/init'#_LA.pth.tar'
 
 		

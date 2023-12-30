@@ -56,7 +56,8 @@ def main():
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
 		patience=3,
-		epochs=10
+		epochs=10,
+  		dim_embedding=None
   	)
  
  
