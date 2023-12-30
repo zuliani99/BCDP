@@ -87,3 +87,8 @@ def collate_fn(batch):
     labels = torch.tensor([item[1] for item in batch])
 
     return {'input_ids': input_ids, 'attention_mask': attention_mask}, labels
+
+
+
+def write_csv():
+    pass
