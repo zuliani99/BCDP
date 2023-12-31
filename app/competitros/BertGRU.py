@@ -1,35 +1,46 @@
 #https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/6%20-%20Transformers%20for%20Sentiment%20Analysis.ipynb
 
 import torch.nn as nn
+import torch
 
 from train_evaluate import Train_Evaluate
 
 
 class BertGRUModel(nn.Module):
-    def __init__(self, pre_trained_bert, gru_hidden_size, num_classes):
-        super(BertGRUModel, self).__init__()
+	def __init__(self, pre_trained_bert, gru_input_size, gru_hidden_size, num_classes):
+		super(BertGRUModel, self).__init__()
 
-        self.pre_trained_bert = pre_trained_bert
+		self.pre_trained_bert = pre_trained_bert
 
-        self.gru = nn.GRU(input_size=pre_trained_bert.hidden_size,
-                          hidden_size=gru_hidden_size,
-                          batch_first=True)
+		# TODO: FIX THIS
+		# NO ATTRIBUTE HIDDEN_SIZE
+		self.gru = nn.GRU(input_size=gru_input_size,
+						  hidden_size=gru_hidden_size,
+						  batch_first=True)
+  
+		self.dropout = nn.Dropout(0.5)
+  
+		self.fc = nn.Linear(gru_hidden_size, num_classes)
 
-        self.fc = nn.Linear(gru_hidden_size, num_classes)
+	def forward(self, x):
+		
+		outputs = self.pre_trained_bert(**x, output_hidden_states=True)#.last_hidden_state[:, 0, :]
+		#bert_output = outputs.last_hidden_state
+  
+		print(outputs[2][-1].shape)
 
-    def forward(self, x):
-        
-        outputs = self.pre_trained_bert(**x, output_hidden_states=True)
-        bert_output = outputs.last_hidden_state
+		# cls embedding of each last batch last layer
+		_, gru_hidden = self.gru(outputs[2][-1])
+		#hidden = [batch size, hid dim]
+  
+		gru_hidden = self.dropout(gru_hidden)
 
-        lstm_output, _ = self.lstm(bert_output)
+		#output = [batch size, out dim]
+		gru_hidden = gru_hidden[-1,: , :]
 
-        # only take the output from the last time step
-        lstm_output = lstm_output[:, -1, :]
-
-        return self.fc(lstm_output)
-        
-    
+		return self.fc(gru_hidden)
+		
+	
 
 class BertGRU(Train_Evaluate):
 	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
@@ -38,7 +49,7 @@ class BertGRU(Train_Evaluate):
 		self.dataloaders = dataloaders
  
 		Train_Evaluate.__init__(self, 'BertLinears', device,
-						BertGRUModel(model, 512, num_classes=2),
+						BertGRUModel(model, gru_input_size=768, gru_hidden_size=384, num_classes=2),
 						tokenizer, embedding_split_perc, loss_fn, score_fn,
 						patience, epochs, batch_size, dim_embedding)
 		
