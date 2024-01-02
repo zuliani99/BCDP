@@ -113,9 +113,9 @@ def main():
  
 	methods = [
 		# our approaches
-		main_approach,
-		#layer_wise,
-		#layer_aggregation,
+		#main_approach,
+		layer_wise,
+		layer_aggregation,
 
 		# competitors
 		#bert_linears,

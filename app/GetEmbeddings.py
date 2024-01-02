@@ -75,7 +75,7 @@ class GetEmbeddings():
 			pbar = tqdm(dataloader, total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
 
 
-			labels_npy = np.empty(0)
+			labels_npy = np.empty((0))
 			embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
 
    
@@ -85,8 +85,7 @@ class GetEmbeddings():
 					for key in list(dictionary.keys()):
 						dictionary[key] = dictionary[key].to(self.device)
 
-					labels_npy = np.vstack((labels_npy, np.array([
-         						-1 if x == 0 else x for x in torch.squeeze(labels).numpy()])))
+					labels_npy = np.append(labels_npy, np.array([-1 if x == 0 else x for x in torch.squeeze(labels).numpy()]))
         						
 					if self.name == 'LayerAggregation':
 						_, embeds = self.model(dictionary)
