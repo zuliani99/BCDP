@@ -1,5 +1,5 @@
 
-from get_embeddings import GetEmbeddings
+from GetEmbeddings import GetEmbeddings
 import torch.nn as nn
 import torch
 
@@ -16,14 +16,17 @@ class BertLayersWise(nn.Module):
 
 
 class LayerWise(GetEmbeddings):
-	def __init__(self, device, datasets_dict, model, tokenizer, embedding_split_perc):
+	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, batch_size):
 		GetEmbeddings.__init__(self, 'LayerWise', embedding_split_perc,
-                         device, tokenizer, BertLayersWise(model).to(device),
-                         embedding_dim = 12 * 768)
-		self.datasets_dict = datasets_dict
+                         device, tokenizer, BertLayersWise(model).to(device), batch_size,
+                         embeddings_dim = 12 * 768)
+		self.dataloaders = dataloaders
 
   
 	def run(self):
-		for ds_name, dataset in self.datasets_dict.items():
-			self.get_embeddings(ds_name, dataset)
+		for ds_name, dls in self.dataloaders.items():
+		#for ds_name, dataset in self.datasets_dict.items():
+			#self.get_embeddings(ds_name, dataset)
+			self.get_embeddings(ds_name, dls)
+   
 			# run clusering

@@ -1,5 +1,5 @@
 
-from train_evaluate import Train_Evaluate
+from TrainEvaluate import Train_Evaluate
 
 import torch
 import torch.nn as nn
@@ -98,14 +98,14 @@ class Bert_Layer_aggregation(nn.Module):
 
 class LayerAggregation(Train_Evaluate):
 	def __init__(self, device, dataloaders, model, tokenizer,
-			  	embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, dim_embedding):
+			  	embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size):
 		
 		self.dataloaders = dataloaders
 		
 		Train_Evaluate.__init__(self, 'LayerAggregation', device,
 						Bert_Layer_aggregation(model, batch_size),
 						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, dim_embedding)
+						patience, epochs, batch_size, embeddings_dim = 768 * 12)
   
 
 
@@ -119,7 +119,8 @@ class LayerAggregation(Train_Evaluate):
 			#test_accuracy, test_loss = self.test(self.test_dl)
 			_, _ = self.test(dls['test_dl'])
    
-			self.get_embeddings(self, ds_name, dls['dataset'], self.embedding_dim)
+			#self.get_embeddings(ds_name, dls['dataset'], self.embeddings_dim)
+			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
   

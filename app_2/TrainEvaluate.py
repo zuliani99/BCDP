@@ -1,17 +1,15 @@
-import tqdm
-from get_embeddings import GetEmbeddings
+from tqdm import tqdm
+from GetEmbeddings import GetEmbeddings
 import torch
 
 class Train_Evaluate(GetEmbeddings):
-	def __init__(self, name, device, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embedding_dim):
+	def __init__(self, name, device, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embeddings_dim):
 		GetEmbeddings.__init__(self, name, embedding_split_perc,
-                         device, tokenizer, model.to(device), embedding_dim)
+                         device, tokenizer, model.to(device), batch_size, embeddings_dim)
   
-		self.batch_size = batch_size
-		#self.datasets_dict = datasets_dict
 		self.loss_fn = loss_fn
 		self.score_fn = score_fn
-		self.optimizer = torch.optim.Adam(model.parameters())#torch.optim.AdamW(model.parameters(), lr = 1e-5)#, lr = 1e-5, eps = 1e-8)
+		self.optimizer = torch.optim.AdamW(model.parameters(), lr=0.0001)
 		self.patience = patience
 		self.epochs = epochs
   
@@ -47,14 +45,18 @@ class Train_Evaluate(GetEmbeddings):
 		pbar = tqdm(val_dl, total = len(val_dl), leave=False)
 
 		with torch.inference_mode(): # Allow inference mode
-			for texts, labels in pbar:
-				texts, label = texts.to(self.device), labels.to(self.device)
-	
-				texts = self.tokenizer(texts, return_tensors='pt', truncation=True, padding=True).to(self.device)
-	
-				outputs, _ = self.model(texts)
-				
-				accuracy = self.score_fn(outputs, label)
+			for dictionary, labels in pbar:
+
+				for key in list(dictionary.keys()):
+					dictionary[key] = dictionary[key].to(self.device)
+				labels = labels.to(self.device)
+    		
+				if self.name == 'LayerAggregation':
+					outputs, _ = self.model(dictionary)
+				else: 
+					outputs = self.model(dictionary)
+     				
+				accuracy = self.score_fn(outputs, labels)
 				loss = self.loss_fn(outputs, labels)
 
 				val_accuracy += accuracy
@@ -80,7 +82,7 @@ class Train_Evaluate(GetEmbeddings):
 
 	def fit(self, ds_name, self_name, train_dl, val_dl):
 
-		self.__load_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
+		self.__save_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
 
 		check_best_path = f'{self.best_check_filename}/{ds_name}_{self_name}.pth.tar'
 	
@@ -96,12 +98,25 @@ class Train_Evaluate(GetEmbeddings):
 			pbar = tqdm(train_dl, total = len(train_dl), leave=False)
 
 			for dictionary, labels in pbar:
+       
+				#print(dictionary)
+       
+				for key in list(dictionary.keys()):
+					dictionary[key] = dictionary[key].to(self.device)
+				labels = labels.to(self.device)
 								
 				# zero the parameter gradients
 				self.optimizer.zero_grad()
-					
-				outputs, _ = self.model(dictionary)
+				
+				if self.name == 'LayerAggregation':
+					outputs, _ = self.model(dictionary)
+				else: 
+					outputs = self.model(dictionary)
+     
+				#print(outputs.shape)
+				#print(labels.shape)
 
+     
 				loss = self.loss_fn(outputs, labels)
 				
 				loss.backward()
@@ -117,8 +132,8 @@ class Train_Evaluate(GetEmbeddings):
 				pbar.set_postfix(accuracy = accuracy, loss = loss.item())
 	
 
-			train_accuracy /= len(self.train_dl)
-			train_loss /= len(self.train_dl)
+			train_accuracy /= len(train_dl)
+			train_loss /= len(train_dl)
    
 			# scheduler
 			self.scheduler.step(train_loss)

@@ -2,21 +2,21 @@
 
 import torch.nn as nn
 
-from train_evaluate import Train_Evaluate
+from TrainEvaluate import Train_Evaluate
 
 
 class BertLSTMModel(nn.Module):
-	def __init__(self, pre_trained_bert, lstm_input_size, lstm_hidden_size, num_classes, bi_directional):
+	def __init__(self, pre_trained_bert, lstm_hidden_size, num_classes, bidirectional):
 		super(BertLSTMModel, self).__init__()
 
 		self.pre_trained_bert = pre_trained_bert
 
 		# TODO: FIX THIS
 		# NO ATTRIBUTE HIDDEN_SIZE
-		self.lstm = nn.LSTM(input_size=lstm_input_size,
+		self.lstm = nn.LSTM(input_size=self.pre_trained_bert.config.hidden_size,
 							hidden_size=lstm_hidden_size,
 							batch_first=True,
-							bi_directional=bi_directional)
+							bidirectional=bidirectional)
   
 		self.dropout = nn.Dropout(0.5)
 
@@ -26,9 +26,9 @@ class BertLSTMModel(nn.Module):
 		
 		outputs = self.pre_trained_bert(**x, output_hidden_states=True)
   
-		print(outputs[2][-1].shape)
+		print(outputs[2][-1][:,0,:].shape)
 
-		_, (lstm_hidden, _) = self.lstm(outputs[2][-1])
+		_, (lstm_hidden, _) = self.lstm(outputs[2][-1][:,0,:])
   
 		lstm_hidden = self.dropout(lstm_hidden)
 
@@ -43,14 +43,14 @@ class BertLSTMModel(nn.Module):
 
 class BertLSTM(Train_Evaluate):
 	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, dim_embedding, bi_directional):
+						patience, epochs, batch_size, embeddings_dim, bidirectional):
 		
 		self.dataloaders = dataloaders
   
-		Train_Evaluate.__init__(self, 'BertLinears_bi' if bi_directional is True else 'BertLinears', device,
-						BertLSTMModel(model, lstm_input_size=768,lstm_hidden_size=384, num_classes=2, bi_directional=bi_directional),
+		Train_Evaluate.__init__(self, 'BertLinears_bi' if bidirectional is True else 'BertLinears', device,
+						BertLSTMModel(model, lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional),
 						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, dim_embedding)
+						patience, epochs, batch_size, embeddings_dim)
 		
 
 	def run(self):

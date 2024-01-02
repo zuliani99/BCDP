@@ -1,21 +1,23 @@
-from utils import to_npy
+
+#from utils import to_npy
 import torch
 from tqdm import tqdm
 import numpy as np
-import os
+#import os
 
 class GetEmbeddings():
-	def __init__(self, name, embedding_split_perc, device, tokenizer, model, embedding_dim = None):
+	def __init__(self, name, embedding_split_perc, device, tokenizer, model, batch_size, embeddings_dim = None):
 		self.name = name
 		self.embedding_split_perc = embedding_split_perc
 		self.device = device
 		self.tokenizer = tokenizer
 		self.model = model
-		self.embedding_dim = embedding_dim
+		self.batch_size = batch_size
+		self.embeddings_dim = embeddings_dim
 	
 	
-	def get_embeddings(self, ds_name, dataset):
-		if self.embedding_dim is None: return
+	'''def get_embeddings(self, ds_name, dataset):
+		if self.embeddings_dim is None: return
 
 		for ds_type in ['train', 'test']:
       			
@@ -34,7 +36,7 @@ class GetEmbeddings():
 
 			for idx, (strat_range, end_range) in enumerate(range_splits):
 				
-				embeddings_tensor = torch.empty((0, self.embedding_dim)).to(self.device)
+				embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
 
 				torch.save(embeddings_tensor, f'{path}/{ds_type}_{idx}.pt')
 
@@ -61,4 +63,39 @@ class GetEmbeddings():
 					torch.save(embeddings_tensor,  f'{path}/{ds_type}_{idx}.pt')
 
 
-		to_npy(self.datasets_dict, self.embedding_split_perc, self.name)
+		to_npy(ds_name, self.embedding_split_perc, self.name)'''
+  
+  
+
+	def get_embeddings(self, ds_name, dataloaders):
+		if self.embeddings_dim is None: return
+
+		for dl_name, dataloader in dataloaders.items():
+
+			pbar = tqdm(dataloader, total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
+
+
+			labels_npy = np.empty(0)
+			embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
+
+   
+			with torch.inference_mode(): # Allow inference mode
+				for dictionary, labels in pbar:
+        
+					for key in list(dictionary.keys()):
+						dictionary[key] = dictionary[key].to(self.device)
+
+					labels_npy = np.vstack((labels_npy, np.array([
+         						-1 if x == 0 else x for x in torch.squeeze(labels).numpy()])))
+        						
+					if self.name == 'LayerAggregation':
+						_, embeds = self.model(dictionary)
+					else:
+						embeds = self.model(dictionary)
+
+					embeddings_tensor = torch.cat((embeddings_tensor, embeds), dim=0)
+     
+				np.save(f'app/embeddings/{ds_name}/{dl_name}_labels.npy', labels_npy)
+				np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy',
+					embeddings_tensor.cpu().detach().numpy()
+            	)

@@ -1,4 +1,4 @@
-import torch
+
 from torch.utils.data import Dataset
 
 class CustomTextDataset(Dataset):
@@ -19,9 +19,5 @@ class CustomTextDataset(Dataset):
         )
         input_ids = encoding['input_ids'].squeeze()
         attention_mask = encoding['attention_mask'].squeeze()
-
-        #return #{'input_ids': input_ids, 'attention_mask': attention_mask, 'label': self.vocab[idx]['label']}
-        
-        
 
         return {'input_ids': input_ids, 'attention_mask': attention_mask}, self.vocab[idx]['label']

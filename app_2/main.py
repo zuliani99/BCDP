@@ -23,19 +23,19 @@ def main():
 	embedding_split_perc = 0.1
     
 	batch_size = 64
+	epochs = 10
+	patience = 3
 
 	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 	model = BertModel.from_pretrained("bert-base-uncased").to(device)
- 
-	datasets_dict = get_datasets()
- 
-	dataloaders = get_dataloaders(datasets_dict, tokenizer, batch_size)
+  
+	dataloaders = get_dataloaders(get_datasets(), tokenizer, batch_size)
 
 	loss_fn = nn.CrossEntropyLoss()
 
 	# our approaches
-	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
-	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
+	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc, batch_size)
+	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, batch_size)
 	layer_aggregation = LayerAggregation(
 		device=device,
 		batch_size=batch_size,
@@ -45,9 +45,8 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience=3,
-		epochs=10,
-		dim_embedding=768 * 12
+		patience=patience,
+		epochs=epochs
     )
  
 	
@@ -61,9 +60,9 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience=3,
-		epochs=10,
-  		dim_embedding=None
+		patience=patience,
+		epochs=epochs,
+  		embeddings_dim=None
   	)
  
 	bert_lstm = BertLSTM(
@@ -75,10 +74,10 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience=3,
-		epochs=10,
-  		dim_embedding=None,
-		bi_directional=False
+		patience=patience,
+		epochs=epochs,
+  		embeddings_dim=None,
+		bidirectional=False
   	)
  
 	bert_lstm_bi = BertLSTM(
@@ -90,10 +89,10 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience=3,
-		epochs=10,
-  		dim_embedding=None,
-		bi_directional=True
+		patience=patience,
+		epochs=epochs,
+  		embeddings_dim=None,
+		bidirectional=True
   	)
  
 	bert_gru = BertGRU(
@@ -105,9 +104,9 @@ def main():
      	embedding_split_perc=embedding_split_perc,
       	loss_fn=loss_fn,
 		score_fn=accuracy_score,
-		patience=3,
-		epochs=10,
-  		dim_embedding=None,
+		patience=patience,
+		epochs=epochs,
+  		embeddings_dim=None,
   	)
  
  
@@ -115,14 +114,14 @@ def main():
 	methods = [
 		# our approaches
 		main_approach,
-		layer_wise,
-		layer_aggregation,
+		#layer_wise,
+		#layer_aggregation,
 
 		# competitors
-		bert_linears,
-		bert_lstm,
-		bert_lstm_bi,
-		bert_gru
+		#bert_linears,
+		#bert_lstm,
+		#bert_lstm_bi,
+		#bert_gru
   
 		# baselines
 	]

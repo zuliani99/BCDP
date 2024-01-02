@@ -1,36 +1,39 @@
 
-from train_evaluate import Train_Evaluate
+from TrainEvaluate import Train_Evaluate
 import torch.nn as nn
 
 
 class BertLinearLayer(nn.Module):
 
-	def __init__(self, pretrained_model, n_classes):
+	def __init__(self, pre_trained_bert, n_classes):
 		super(BertLinearLayer, self).__init__()
-		self.bert = pretrained_model
+		self.pre_trained_bert = pre_trained_bert
 		self.drop = nn.Dropout(p=0.5)
-		self.out = nn.Linear(self.bert.config.hidden_size, n_classes)
+		self.out = nn.Linear(self.pre_trained_bert.config.hidden_size, n_classes)
+		
+		#print('hidden_size', self.pre_trained_bert.config.hidden_size)
   
-	def forward(self, input_ids, attention_mask):
-		_, pooled_output = self.bert(
-			input_ids=input_ids,
-			attention_mask=attention_mask
-		)
+	def forward(self, x):
+		output = self.pre_trained_bert(**x, output_hidden_states=True)
+  
+		#print('output[2][-1][:,0,:] batch x 768', output[2][-1][:,0,:].shape)
+		output = output[2][-1][:,0,:]
 
-		output = self.drop(pooled_output)
+		output = self.drop(output)
+		
 		return self.out(output)
 
 
 class BertLinears(Train_Evaluate):
 	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, dim_embedding):
+						patience, epochs, batch_size, embeddings_dim):
 		
 		self.dataloaders = dataloaders
   		
 		Train_Evaluate.__init__(self, 'BertLinears', device,
 						BertLinearLayer(model, n_classes=2),
 						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, dim_embedding)
+						patience, epochs, batch_size, embeddings_dim)
 		
 
 	def run(self):
