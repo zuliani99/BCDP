@@ -1,5 +1,5 @@
 
-from GetEmbeddings import GetEmbeddings
+from app.ClusteringEmbeddings import ClusteringEmbeddings
 import torch.nn as nn
 
 class BertLastLayer(nn.Module):
@@ -12,10 +12,10 @@ class BertLastLayer(nn.Module):
 		
 	
 
-class MainApproch(GetEmbeddings):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, batch_size):
-		GetEmbeddings.__init__(self, 'MainApproch', embedding_split_perc,
-                         device, tokenizer, BertLastLayer(model).to(device), batch_size,
+class MainApproch(ClusteringEmbeddings):
+	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc):
+		ClusteringEmbeddings.__init__(self, 'MainApproch', embedding_split_perc,
+                         device, tokenizer, BertLastLayer(model).to(device),
                          embeddings_dim = 768)
 		
 		self.dataloaders = dataloaders
@@ -28,3 +28,4 @@ class MainApproch(GetEmbeddings):
 			self.get_embeddings(ds_name, dls)
    
 			# run clusering
+			self.faiss_clusering.run_faiss_kmeans(ds_name, super(self.__calss__.__name))

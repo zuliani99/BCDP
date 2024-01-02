@@ -122,3 +122,4 @@ class LayerAggregation(Train_Evaluate):
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
+			self.faiss_clusering.run_faiss_kmeans(ds_name, super(self.__calss__.__name))

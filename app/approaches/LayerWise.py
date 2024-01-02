@@ -1,5 +1,5 @@
 
-from GetEmbeddings import GetEmbeddings
+from app.ClusteringEmbeddings import ClusteringEmbeddings
 import torch.nn as nn
 import torch
 
@@ -15,10 +15,10 @@ class BertLayersWise(nn.Module):
 		return torch.cat([h_state[:,0,:] for h_state in hidden_states_batches[1:]], dim=1)
 
 
-class LayerWise(GetEmbeddings):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, batch_size):
-		GetEmbeddings.__init__(self, 'LayerWise', embedding_split_perc,
-                         device, tokenizer, BertLayersWise(model).to(device), batch_size,
+class LayerWise(ClusteringEmbeddings):
+	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc):
+		ClusteringEmbeddings.__init__(self, 'LayerWise', embedding_split_perc,
+                         device, tokenizer, BertLayersWise(model).to(device),
                          embeddings_dim = 12 * 768)
 		self.dataloaders = dataloaders
 
@@ -30,3 +30,4 @@ class LayerWise(GetEmbeddings):
 			self.get_embeddings(ds_name, dls)
    
 			# run clusering
+			self.faiss_clusering.run_faiss_kmeans(ds_name, super(self.__calss__.__name))

@@ -5,15 +5,18 @@ from tqdm import tqdm
 import numpy as np
 import os
 
-class GetEmbeddings():
-	def __init__(self, name, embedding_split_perc, device, tokenizer, model, batch_size, embeddings_dim = None):
+from FaissClustering import FaissClustering
+
+
+class ClusteringEmbeddings():
+	def __init__(self, name, embedding_split_perc, device, tokenizer, model, embeddings_dim = None):
 		self.name = name
 		self.embedding_split_perc = embedding_split_perc
 		self.device = device
 		self.tokenizer = tokenizer
 		self.model = model
-		self.batch_size = batch_size
 		self.embeddings_dim = embeddings_dim
+		self.faiss_clusering = FaissClustering()
 	
 	 
 
@@ -57,3 +60,5 @@ class GetEmbeddings():
 				if save_embeddings_npy: np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy',
 											embeddings_tensor.cpu().detach().numpy()
 										)
+	
+	

@@ -34,8 +34,8 @@ def main():
 	loss_fn = nn.CrossEntropyLoss()
 
 	# our approaches
-	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc, batch_size)
-	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, batch_size)
+	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
+	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
 	layer_aggregation = LayerAggregation(
 		device=device,
 		batch_size=batch_size,
