@@ -1,6 +1,8 @@
+
 from tqdm import tqdm
 from GetEmbeddings import GetEmbeddings
 import torch
+import os
 
 class Train_Evaluate(GetEmbeddings):
 	def __init__(self, name, device, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embeddings_dim):
@@ -19,10 +21,16 @@ class Train_Evaluate(GetEmbeddings):
 		self.init_check_filename = 'app/checkpoints/init'#_LA.pth.tar'
 
 		
-
-	def __save_checkpoint(self, filename):
+	def __save_init_checkpoint(self, filename):
 
 		checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict() }
+		torch.save(checkpoint, filename)
+
+
+	def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
+
+		checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(),
+                      'actual_patience': actual_patience, 'epoch': epoch, 'best_val_loss': best_val_loss}
 		torch.save(checkpoint, filename)
 
 
@@ -33,6 +41,8 @@ class Train_Evaluate(GetEmbeddings):
 		self.model.load_state_dict(checkpoint['state_dict'])
 		self.optimizer.load_state_dict(checkpoint['optimizer'])
 		self.scheduler.load_state_dict(checkpoint['scheduler'])
+
+		return checkpoint['actual_patience'], checkpoint['epoch'], checkpoint['best_val_loss']
   
 
 
@@ -70,6 +80,8 @@ class Train_Evaluate(GetEmbeddings):
 			val_loss /= len(val_dl)
    
 		return val_accuracy, val_loss
+	
+	
 
 	def test(self, test_dl):
 		test_accuracy, test_loss = self.evaluate(test_dl)
@@ -81,17 +93,24 @@ class Train_Evaluate(GetEmbeddings):
 
 
 	def fit(self, ds_name, self_name, train_dl, val_dl):
-
-		self.__save_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
-
-		check_best_path = f'{self.best_check_filename}/{ds_name}_{self_name}.pth.tar'
-	
-		self.model.train()
 		
+		check_best_path = f'{self.best_check_filename}/{ds_name}_{self_name}.pth.tar'
+		
+		actual_epoch = 0
 		best_val_loss = float('inf')
 		actual_patience = 0
 
-		for epoch in range(self.epochs):  # loop over the dataset multiple times			
+		if os.path.exists(check_best_path):
+			actual_patience, actual_epoch, best_val_loss = self.__load_checkpoint(check_best_path)
+		
+		if not os.path.exists(f'{self.init_check_filename}_{self_name}.pth.tar'):
+			self.__save_init_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
+
+	
+		self.model.train()
+		
+
+		for epoch in range(actual_epoch, self.epochs):  # loop over the dataset multiple times			
 
 			train_accuracy, train_loss = 0.0, 0.0
 
@@ -149,7 +168,7 @@ class Train_Evaluate(GetEmbeddings):
 			if(val_loss < best_val_loss):
 				best_val_loss = val_accuracy
 				actual_patience = 0
-				self.__save_checkpoint(check_best_path)
+				self.__save_best_checkpoint(check_best_path, actual_patience, epoch, best_val_loss)
 			else:
 				actual_patience += 1
 				if actual_patience >= self.patience:

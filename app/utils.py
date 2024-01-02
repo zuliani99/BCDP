@@ -4,12 +4,8 @@ from dataset import CustomTextDataset
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, random_split
 
-
-from tqdm import tqdm
 import torch
-import numpy as np
 from datasets import load_dataset
-import os
 
 def get_datasets():
 	return {
@@ -19,17 +15,6 @@ def get_datasets():
 	}
  
  
-'''def to_npy(ds_name, splits_perc, strategy_name):
-	for ds_type in ['train', 'test']:
-		to_array = np.empty((0,768))
-		for idx in range(int(splits_perc * 100)):
-			to_array = np.vstack((to_array,
-									torch.load(f'app/embeddings/{ds_name}/{strategy_name}/{ds_type}_{idx}.pt').cpu().detach().numpy()))
-				
-			# delete .tensor file
-			os.remove(f'app/embeddings/{ds_name}/{strategy_name}/{ds_type}_{idx}.pt') 
-
-		np.save(f'app/embeddings/{ds_name}/{strategy_name}/{ds_type}.npy', to_array)'''
    
    
 def accuracy_score(output, label):
@@ -69,7 +54,6 @@ def get_dataloaders(datasets_dict, tokenizer, batch_size):
    
 		datalaoders[ds_name]['test_dl'] = DataLoader(test_ds, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, pin_memory=True)
 		
-		#datalaoders[ds_name]['dataset'] = dataset
 	
 	return datalaoders
 

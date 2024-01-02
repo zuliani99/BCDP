@@ -116,11 +116,9 @@ class LayerAggregation(Train_Evaluate):
 			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
    
 			# we can for eaxample save these metrics to compare with the additional embedding
-			#test_accuracy, test_loss = self.test(self.test_dl)
-			_, _ = self.test(dls['test_dl'])
+			test_accuracy, test_loss = self.test(dls['test_dl'])
    
 			#self.get_embeddings(ds_name, dls['dataset'], self.embeddings_dim)
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
-  
