@@ -43,15 +43,13 @@ class BertGRUModel(nn.Module):
 	
 
 class BertGRU(Train_Evaluate):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim):
+	def __init__(self, params, dataloaders):
 		
 		self.dataloaders = dataloaders
+  
+		params['model'] = BertGRUModel(params['model'], gru_hidden_size=384, num_classes=2)
  
-		Train_Evaluate.__init__(self, 'BertLinears', device,
-						BertGRUModel(model, gru_hidden_size=384, num_classes=2),
-						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim)
+		super().__init__(self.__class__.__name__, params)
 		
 
 	def run(self):

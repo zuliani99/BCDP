@@ -32,82 +32,33 @@ def main():
 	dataloaders = get_dataloaders(get_datasets(), tokenizer, batch_size)
 
 	loss_fn = nn.CrossEntropyLoss()
+ 
+	params = {
+		'device': device,
+		'batch_size': batch_size,
+  		'model': model,
+    	'tokenizer': tokenizer,
+     	'embedding_split_perc': embedding_split_perc,
+      	'loss_fn': loss_fn,
+		'score_fn': accuracy_score,
+		'patience': patience,
+		'epochs': epochs
+	}
 
 	# our approaches
 	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
 	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
-	layer_aggregation = LayerAggregation(
-		device=device,
-		batch_size=batch_size,
-		dataloaders=dataloaders,
-  		model=model,
-    	tokenizer=tokenizer,
-     	embedding_split_perc=embedding_split_perc,
-      	loss_fn=loss_fn,
-		score_fn=accuracy_score,
-		patience=patience,
-		epochs=epochs
-    )
+	layer_aggregation = LayerAggregation(params)
  
 	
 	# competitors
-	bert_linears = BertLinears(
-      	device=device,
-		batch_size=batch_size,
-		dataloaders=dataloaders,
-  		model=model,
-    	tokenizer=tokenizer,
-     	embedding_split_perc=embedding_split_perc,
-      	loss_fn=loss_fn,
-		score_fn=accuracy_score,
-		patience=patience,
-		epochs=epochs,
-  		embeddings_dim=None
-  	)
+	bert_linears = BertLinears(params, dataloaders)
  
-	bert_lstm = BertLSTM(
-      	device=device,
-		batch_size=batch_size,
-		dataloaders=dataloaders,
-  		model=model,
-    	tokenizer=tokenizer,
-     	embedding_split_perc=embedding_split_perc,
-      	loss_fn=loss_fn,
-		score_fn=accuracy_score,
-		patience=patience,
-		epochs=epochs,
-  		embeddings_dim=None,
-		bidirectional=False
-  	)
+	bert_lstm = BertLSTM(params, dataloaders, bidirectional=False)
  
-	bert_lstm_bi = BertLSTM(
-      	device=device,
-		batch_size=batch_size,
-		dataloaders=dataloaders,
-  		model=model,
-    	tokenizer=tokenizer,
-     	embedding_split_perc=embedding_split_perc,
-      	loss_fn=loss_fn,
-		score_fn=accuracy_score,
-		patience=patience,
-		epochs=epochs,
-  		embeddings_dim=None,
-		bidirectional=True
-  	)
+	bert_lstm_bi = BertLSTM(params, dataloaders, bidirectional=True)
  
-	bert_gru = BertGRU(
-      	device=device,
-		batch_size=batch_size,
-		dataloaders=dataloaders,
-  		model=model,
-    	tokenizer=tokenizer,
-     	embedding_split_perc=embedding_split_perc,
-      	loss_fn=loss_fn,
-		score_fn=accuracy_score,
-		patience=patience,
-		epochs=epochs,
-  		embeddings_dim=None,
-  	)
+	bert_gru = BertGRU(params)
  
  
  

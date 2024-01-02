@@ -14,7 +14,7 @@ class ClusteringEmbeddings():
 		self.embedding_split_perc = embedding_split_perc
 		self.device = device
 		self.tokenizer = tokenizer
-		self.model = model
+		self.model = model.to(device)
 		self.embeddings_dim = embeddings_dim
 		self.faiss_clusering = FaissClustering()
 	

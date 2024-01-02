@@ -5,16 +5,16 @@ import torch
 import os
 
 class Train_Evaluate(ClusteringEmbeddings):
-	def __init__(self, name, device, model, tokenizer, embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size, embeddings_dim):
-		ClusteringEmbeddings.__init__(self, name, embedding_split_perc,
-                         device, tokenizer, model.to(device), embeddings_dim)
+	def __init__(self, name, params):
+		ClusteringEmbeddings.__init__(self, name, params['embedding_split_perc'],
+                         params['device'], params['tokenizer'], params['model'], params['embeddings_dim'])
   
-		self.batch_size = batch_size
-		self.loss_fn = loss_fn
-		self.score_fn = score_fn
-		self.optimizer = torch.optim.AdamW(model.parameters(), lr=0.0001)
-		self.patience = patience
-		self.epochs = epochs
+		self.batch_size = params['batch_size']
+		self.loss_fn = params['loss_fn']
+		self.score_fn = params['score_fn']
+		self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.0001)
+		self.patience = params['patience']
+		self.epochs = params['epochs']
   
 		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
   

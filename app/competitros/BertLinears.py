@@ -25,15 +25,13 @@ class BertLinearLayer(nn.Module):
 
 
 class BertLinears(Train_Evaluate):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim):
+	def __init__(self, params, dataloaders):
 		
 		self.dataloaders = dataloaders
+  
+		params['model'] = BertLinearLayer(params['model'], n_classes=2)
   		
-		Train_Evaluate.__init__(self, 'BertLinears', device,
-						BertLinearLayer(model, n_classes=2),
-						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim)
+		super().__init__(self.__class__.__name__, params)
 		
 
 	def run(self):

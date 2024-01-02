@@ -42,15 +42,13 @@ class BertLSTMModel(nn.Module):
 	
 
 class BertLSTM(Train_Evaluate):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim, bidirectional):
+	def __init__(self, params, dataloaders, bidirectional):
 		
 		self.dataloaders = dataloaders
   
-		Train_Evaluate.__init__(self, 'BertLinears_bi' if bidirectional is True else 'BertLinears', device,
-						BertLSTMModel(model, lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional),
-						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim)
+		params['model'] = BertLSTMModel(params['model'], lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional)
+  
+		super().__init__(self, 'BertLinears_bi' if bidirectional is True else 'BertLinears', params)
 		
 
 	def run(self):
