@@ -97,17 +97,14 @@ class Bert_Layer_aggregation(nn.Module):
 
 
 class LayerAggregation(Train_Evaluate):
-	def __init__(self, device, dataloaders, model, tokenizer,
-			  	embedding_split_perc, loss_fn, score_fn, patience, epochs, batch_size):
+	def __init__(self, params, dataloaders):
 		
 		self.dataloaders = dataloaders
+		params['model'] = Bert_Layer_aggregation(params['model'], params['batch_size'])
+		params['embeddings_dim'] = 768 * 12
 		
-		Train_Evaluate.__init__(self, 'LayerAggregation', device,
-						Bert_Layer_aggregation(model, batch_size),
-						tokenizer, embedding_split_perc, loss_fn, score_fn,
-						patience, epochs, batch_size, embeddings_dim = 768 * 12)
+		super().__init__(self.__class__.__name__, params)
   
-
 
 	def run(self):
 	 
@@ -122,4 +119,4 @@ class LayerAggregation(Train_Evaluate):
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
-			self.faiss_clusering.run_faiss_kmeans(ds_name, super(self.__calss__.__name))
+			#self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name)
