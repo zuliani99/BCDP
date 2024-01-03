@@ -10,8 +10,8 @@ from datasets import load_dataset
 def get_datasets():
 	return {
 	 	'imdb': load_dataset('imdb'), 
-		'sst2': load_dataset('sst2'),
-		'y_p': load_dataset('yelp_polarity')
+		#'sst2': load_dataset('sst2'),
+		#'y_p': load_dataset('yelp_polarity')
 	}
  
  

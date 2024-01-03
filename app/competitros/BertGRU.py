@@ -48,7 +48,8 @@ class BertGRU(Train_Evaluate):
 		self.dataloaders = dataloaders
   
 		params['model'] = BertGRUModel(params['model'], gru_hidden_size=384, num_classes=2)
- 
+		params['embeddings_dim'] = None
+  
 		super().__init__(self.__class__.__name__, params)
 		
 

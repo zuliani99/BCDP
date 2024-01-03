@@ -14,8 +14,10 @@ from competitros.BertGRU import BertGRU
 import torch
 import torch.nn as nn
 
+import copy
 
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
@@ -23,7 +25,7 @@ def main():
 	embedding_split_perc = 0.1
     
 	batch_size = 64
-	epochs = 10
+	epochs = 5
 	patience = 3
 
 	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -48,24 +50,24 @@ def main():
 	# our approaches
 	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
 	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
-	layer_aggregation = LayerAggregation(params)
+	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders)
  
 	
 	# competitors
-	bert_linears = BertLinears(params, dataloaders)
+	bert_linears = BertLinears(copy.deepcopy(params), dataloaders)
  
-	bert_lstm = BertLSTM(params, dataloaders, bidirectional=False)
+	bert_lstm = BertLSTM(copy.deepcopy(params), dataloaders, bidirectional=False)
  
-	bert_lstm_bi = BertLSTM(params, dataloaders, bidirectional=True)
+	bert_lstm_bi = BertLSTM(copy.deepcopy(params), dataloaders, bidirectional=True)
  
-	bert_gru = BertGRU(params)
+	bert_gru = BertGRU(copy.deepcopy(params), dataloaders)
  
  
  
 	methods = [
 		# our approaches
 		#main_approach,
-		layer_wise,
+		#layer_wise,
 		layer_aggregation,
 
 		# competitors

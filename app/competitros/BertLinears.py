@@ -30,6 +30,7 @@ class BertLinears(Train_Evaluate):
 		self.dataloaders = dataloaders
   
 		params['model'] = BertLinearLayer(params['model'], n_classes=2)
+		params['embeddings_dim'] = None
   		
 		super().__init__(self.__class__.__name__, params)
 		

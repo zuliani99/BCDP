@@ -47,8 +47,8 @@ class BertLSTM(Train_Evaluate):
 		self.dataloaders = dataloaders
   
 		params['model'] = BertLSTMModel(params['model'], lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional)
-  
-		super().__init__(self, 'BertLinears_bi' if bidirectional is True else 'BertLinears', params)
+		params['embeddings_dim'] = None
+		super().__init__('BertLinears_bi' if bidirectional is True else 'BertLinears', params)
 		
 
 	def run(self):

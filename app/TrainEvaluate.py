@@ -1,6 +1,6 @@
 
 from tqdm import tqdm
-from app.ClusteringEmbeddings import ClusteringEmbeddings
+from ClusteringEmbeddings import ClusteringEmbeddings
 import torch
 import os
 
@@ -12,12 +12,14 @@ class Train_Evaluate(ClusteringEmbeddings):
 		self.batch_size = params['batch_size']
 		self.loss_fn = params['loss_fn']
 		self.score_fn = params['score_fn']
-		self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=0.0001)
+		#self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
+		self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3, weight_decay=1e-5)
 		self.patience = params['patience']
 		self.epochs = params['epochs']
   
 		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
-  
+		#self.scheduler = torch.optim.lr_scheduler.CyclicLRWithRestarts(self.optimizer, self.batch_size, 5, restart_period=5, t_mult=1.2, policy="cosine")
+																						#attento a qui il 5 sono le epoche
 		self.best_check_filename = 'app/checkpoints'
 		self.init_check_filename = 'app/checkpoints/init'#_LA.pth.tar'
 
@@ -119,7 +121,6 @@ class Train_Evaluate(ClusteringEmbeddings):
 
 			for dictionary, labels in pbar:
        
-				#print(dictionary)
        
 				for key in list(dictionary.keys()):
 					dictionary[key] = dictionary[key].to(self.device)
@@ -132,9 +133,6 @@ class Train_Evaluate(ClusteringEmbeddings):
 					outputs, _ = self.model(dictionary)
 				else: 
 					outputs = self.model(dictionary)
-     
-				#print(outputs.shape)
-				#print(labels.shape)
 
      
 				loss = self.loss_fn(outputs, labels)

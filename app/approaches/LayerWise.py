@@ -1,5 +1,5 @@
 
-from app.ClusteringEmbeddings import ClusteringEmbeddings
+from ClusteringEmbeddings import ClusteringEmbeddings
 import torch.nn as nn
 import torch
 

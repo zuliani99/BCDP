@@ -1,5 +1,4 @@
 
-
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -25,7 +24,7 @@ class ClusteringEmbeddings():
 
 		for dl_name, dataloader in dataloaders.items():
 
-			pbar = tqdm(dataloader, total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
+			pbar = tqdm(enumerate(dataloader), total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
 
 
 			save_labels_npy, save_embeddings_npy = False, False
@@ -37,10 +36,9 @@ class ClusteringEmbeddings():
 
 			labels_npy = np.empty((0))
 			embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
-
    
 			with torch.inference_mode(): # Allow inference mode
-				for dictionary, labels in pbar:
+				for idx, (dictionary, labels) in pbar:
         
 					for key in list(dictionary.keys()):
 						dictionary[key] = dictionary[key].to(self.device)
@@ -53,12 +51,24 @@ class ClusteringEmbeddings():
 							_, embeds = self.model(dictionary)
 						else:
 							embeds = self.model(dictionary)
+       
+					if save_embeddings_npy:
+						embeddings_tensor = torch.cat((embeddings_tensor, embeds), dim=0)
 
-					embeddings_tensor = torch.cat((embeddings_tensor, embeds), dim=0)
-     
+						if(idx % 100 == 0):
+							if not os.path.exists(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy'):
+								np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy',
+														embeddings_tensor.cpu().detach().numpy()
+													)
+
+							else:
+								prev_embeddings = np.load(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy')
+								np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy', np.vstack((prev_embeddings, embeddings_tensor.cpu().detach().numpy())))
+
+							embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
+						
+      
 				if save_labels_npy: np.save(f'app/embeddings/{ds_name}/{dl_name}_labels.npy', labels_npy)
-				if save_embeddings_npy: np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy',
-											embeddings_tensor.cpu().detach().numpy()
-										)
-	
-	
+				if save_embeddings_npy and (idx % 100 != 0):
+					prev_embeddings = np.load(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy')
+					np.save(f'app/embeddings/{ds_name}/{self.name}/embeddings_{dl_name}.npy', np.vstack((prev_embeddings, embeddings_tensor.cpu().detach().numpy())))
