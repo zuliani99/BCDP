@@ -70,11 +70,10 @@ def main():
  
 	methods = [
 		# our approaches
-		#main_approach, layer_wise, layer_aggregation,
+		main_approach, layer_wise, layer_aggregation,
 
 		# competitors
-		#bert_linears, 
-  		bert_lstm, bert_lstm_bi, bert_gru
+		bert_linears, bert_lstm, bert_lstm_bi, bert_gru
   
 		# baselines
 	]

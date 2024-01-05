@@ -55,22 +55,23 @@ class BertGRU(Train_Evaluate):
 		
 
 	def run(self):
+     
+		print(f'---------------------------------- START {self.__class__.__name__}----------------------------------')
 
 		for ds_name, dls in self.dataloaders.items():
+      
 			print(f'--------------- {ds_name} ---------------')
 			
 			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
 
-   
-			# we can for eaxample save these metrics to compare with the additional embedding
-			#test_accuracy, test_loss = self.test(self.test_dl)
 			test_accuracy, test_loss = self.test(['test_dl'])
    
 			# write results
-			# write_csv(self.__class__.__name__, ds_name, test_accuracy, test_loss)
 			write_csv(
                 ts_dir=self.timestamp,
                 head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
                 values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
                 categoty_type='competitors'
             )
+   
+		print(f'\n---------------------------------- END {self.__class__.__name__}----------------------------------\n\n')

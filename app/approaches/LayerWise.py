@@ -27,10 +27,17 @@ class LayerWise(ClusteringEmbeddings):
 
   
 	def run(self):
+     
+		print(f'---------------------------------- START {self.__class__.__name__}----------------------------------')
+     
 		for ds_name, dls in self.dataloaders.items():
-		#for ds_name, dataset in self.datasets_dict.items():
-			#self.get_embeddings(ds_name, dataset)
+      
+			print(f'--------------- {ds_name} ---------------')
+
 			self.get_embeddings(ds_name, dls)
    
 			# run clusering
 			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name, self.timestamp)
+	
+		print(f'\n---------------------------------- END {self.__class__.__name__}----------------------------------\n\n')
+   
