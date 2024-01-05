@@ -1,6 +1,7 @@
 #https://www.kaggle.com/code/hanjoonchoe/nlp-lstm-bert-pytorch
 
 import torch.nn as nn
+from utils import write_csv
 
 from TrainEvaluate import Train_Evaluate
 
@@ -42,9 +43,10 @@ class BertLSTMModel(nn.Module):
 	
 
 class BertLSTM(Train_Evaluate):
-	def __init__(self, params, dataloaders, bidirectional):
+	def __init__(self, params, dataloaders, timestamp, bidirectional=False):
 		
 		self.dataloaders = dataloaders
+		self.timestamp = timestamp
   
 		params['model'] = BertLSTMModel(params['model'], lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional)
 		params['embeddings_dim'] = None
@@ -65,3 +67,9 @@ class BertLSTM(Train_Evaluate):
    
 			# write results
 			# write_csv(self.__class__.__name__, ds_name, test_accuracy, test_loss)
+			write_csv(
+                ts_dir=self.timestamp,
+                head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
+                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
+                categoty_type='competitors'
+            )

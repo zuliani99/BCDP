@@ -7,15 +7,20 @@ from torch.utils.data import DataLoader, random_split
 import torch
 from datasets import load_dataset
 
+import csv
+import os
+import errno
+
+
+
 def get_datasets():
 	return {
-	 	'imdb': load_dataset('imdb'), 
+	 	#'imdb': load_dataset('imdb'), 
 		#'sst2': load_dataset('sst2'),
-		#'y_p': load_dataset('yelp_polarity')
+		'y_p': load_dataset('yelp_polarity')
 	}
  
  
-   
    
 def accuracy_score(output, label):
 	output_class = torch.argmax(torch.softmax(output, dim=1), dim=1)
@@ -40,7 +45,8 @@ def get_dataloaders(datasets_dict, tokenizer, batch_size):
 		datalaoders[ds_name] = {}
 			
 		train_ds = CustomTextDataset(dataset['train'], tokenizer)
-		test_ds = CustomTextDataset(dataset['test'], tokenizer)
+		if ds_name == 'sst2': test_ds = CustomTextDataset(dataset['validation'], tokenizer)
+		else: test_ds = CustomTextDataset(dataset['test'], tokenizer)
    
 		train_size = len(train_ds)
 
@@ -57,5 +63,25 @@ def get_dataloaders(datasets_dict, tokenizer, batch_size):
 	
 	return datalaoders
 
-def write_csv():
-	pass
+
+def write_csv(ts_dir, head, values, categoty_type):
+    if (not os.path.exists(f'results/{ts_dir}/{categoty_type}_results.csv')):
+        
+        with open(f'results/{ts_dir}/{categoty_type}_results.csv', 'w', encoding='UTF8') as f:
+            writer = csv.writer(f)
+            writer.writerow(head)
+            f.close()
+    
+    with open(f'results/{ts_dir}/{categoty_type}_results.csv', 'a', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        writer.writerow(values)
+        f.close()
+        
+        
+def create_ts_dir_res(timestamp):
+    mydir = os.path.join('results', timestamp) #results
+    try:
+        os.makedirs(mydir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise  # This was not a "directory exist" error..

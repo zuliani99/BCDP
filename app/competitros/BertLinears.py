@@ -1,4 +1,5 @@
 
+from utils import write_csv
 from TrainEvaluate import Train_Evaluate
 import torch.nn as nn
 
@@ -25,9 +26,10 @@ class BertLinearLayer(nn.Module):
 
 
 class BertLinears(Train_Evaluate):
-	def __init__(self, params, dataloaders):
+	def __init__(self, params, dataloaders, timestamp):
 		
 		self.dataloaders = dataloaders
+		self.timestamp = timestamp
   
 		params['model'] = BertLinearLayer(params['model'], n_classes=2)
 		params['embeddings_dim'] = None
@@ -50,3 +52,9 @@ class BertLinears(Train_Evaluate):
    
 			# write results
 			# write_csv(self.__class__.__name__, ds_name, test_accuracy, test_loss)
+			write_csv(
+                ts_dir=self.timestamp,
+                head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
+                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
+                categoty_type='competitors'
+            )

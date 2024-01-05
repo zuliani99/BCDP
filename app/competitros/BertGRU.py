@@ -1,7 +1,7 @@
 #https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/6%20-%20Transformers%20for%20Sentiment%20Analysis.ipynb
 
 import torch.nn as nn
-import torch
+from utils import write_csv
 
 from TrainEvaluate import Train_Evaluate
 
@@ -43,9 +43,10 @@ class BertGRUModel(nn.Module):
 	
 
 class BertGRU(Train_Evaluate):
-	def __init__(self, params, dataloaders):
+	def __init__(self, params, dataloaders, timestamp):
 		
 		self.dataloaders = dataloaders
+		self.timestamp = timestamp
   
 		params['model'] = BertGRUModel(params['model'], gru_hidden_size=384, num_classes=2)
 		params['embeddings_dim'] = None
@@ -67,3 +68,9 @@ class BertGRU(Train_Evaluate):
    
 			# write results
 			# write_csv(self.__class__.__name__, ds_name, test_accuracy, test_loss)
+			write_csv(
+                ts_dir=self.timestamp,
+                head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
+                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
+                categoty_type='competitors'
+            )

@@ -7,7 +7,7 @@ import os
 from FaissClustering import FaissClustering
 
 
-class ClusteringEmbeddings():
+class ClusteringEmbeddings(object):
 	def __init__(self, name, embedding_split_perc, device, tokenizer, model, embeddings_dim = None):
 		self.name = name
 		self.embedding_split_perc = embedding_split_perc

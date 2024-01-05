@@ -13,21 +13,21 @@ class Train_Evaluate(ClusteringEmbeddings):
 		self.loss_fn = params['loss_fn']
 		self.score_fn = params['score_fn']
 		#self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
-		self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3, weight_decay=1e-5)
+		self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)#, weight_decay=1e-5)
 		self.patience = params['patience']
 		self.epochs = params['epochs']
   
-		self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
+		#self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.1, patience=3, verbose=True)
 		#self.scheduler = torch.optim.lr_scheduler.CyclicLRWithRestarts(self.optimizer, self.batch_size, 5, restart_period=5, t_mult=1.2, policy="cosine")
 																						#attento a qui il 5 sono le epoche
 		self.best_check_filename = 'app/checkpoints'
 		self.init_check_filename = 'app/checkpoints/init'#_LA.pth.tar'
 
 		
-	def __save_init_checkpoint(self, filename):
+	#def __save_init_checkpoint(self, filename):
 
-		checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict() }
-		torch.save(checkpoint, filename)
+	#	checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict() }
+	#	torch.save(checkpoint, filename)
 
 
 	def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
@@ -106,13 +106,14 @@ class Train_Evaluate(ClusteringEmbeddings):
 		if os.path.exists(check_best_path):
 			actual_patience, actual_epoch, best_val_loss = self.__load_checkpoint(check_best_path)
 		
-		if not os.path.exists(f'{self.init_check_filename}_{self_name}.pth.tar'):
-			self.__save_init_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
+		#if not os.path.exists(f'{self.init_check_filename}_{self_name}.pth.tar'):
+		#	self.__save_init_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
 
 	
 		self.model.train()
 		
-
+		if actual_epoch + 1 == self.epochs: return 
+  
 		for epoch in range(actual_epoch, self.epochs):  # loop over the dataset multiple times			
 
 			train_accuracy, train_loss = 0.0, 0.0
@@ -154,7 +155,7 @@ class Train_Evaluate(ClusteringEmbeddings):
 			train_loss /= len(train_dl)
    
 			# scheduler
-			self.scheduler.step(train_loss)
+			#self.scheduler.step(train_loss)
    
 
 			# Validation step

@@ -1,8 +1,10 @@
 
 import numpy as np
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 import faiss
 from tqdm.auto import tqdm
+
+from utils import write_csv
 
 class FaissClustering():
     def __init__(self):
@@ -14,10 +16,15 @@ class FaissClustering():
     def get_embbedings_and_labels(self, dataset_name, methods_name):
 
         path = f'app/embeddings/{dataset_name}/{methods_name}'
-        embds = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy'), np.load(f'{path}/test_embeddings.npy')], 0, dtype=np.float32)
-        sents = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy'), np.load(f'{path}/test_labels.npy')], 0, dtype=np.float32)
-        x_train, x_test, y_train, y_test = train_test_split(embds, sents, test_size=self.size_split, random_state=42)
-
+        #embds = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy'), np.load(f'{path}/test_embeddings.npy')], 0, dtype=np.float32)
+        #sents = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy'), np.load(f'{path}/test_labels.npy')], 0, dtype=np.float32)
+        #x_train, x_test, y_train, y_test = train_test_split(embds, sents, test_size=self.size_split, random_state=42)
+        x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], 0, dtype=np.float32)
+        x_test = np.load(f'{path}/test_embeddings.npy')
+        
+        y_train = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy')], 0, dtype=np.float32)
+        y_test = np.load(f'{path}/test_labels.npy')
+        
         return x_train, x_test, y_train, y_test
 
 
@@ -108,6 +115,22 @@ class FaissClustering():
                 if top_k < n_clusters:
                     query_result = self.get_result(x_test, centroids,
                                             sentiment_centroids, top_k=top_k)
-                    print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, self.accuracy_result(query_result, y_test)))
+                    test_accuracy = self.accuracy_result(query_result, y_test)
+                    #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
 
-            print('\n\n')
+                    write_csv(
+                        ts_dir=self.timestamp,
+                        head = ['method', 'dataset', 'test_accuracy'],
+                        values = [methods_name, dataset_name, test_accuracy],
+                        categoty_type='our_approaches'
+                    )
+                    
+            #print('\n\n')
+            
+            
+            '''write_csv(
+                ts_dir=self.timestamp,
+                head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
+                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
+                categoty_type='our_approaches'
+            )'''

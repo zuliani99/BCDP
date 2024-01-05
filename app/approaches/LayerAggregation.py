@@ -4,6 +4,7 @@ from TrainEvaluate import Train_Evaluate
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.init as init
 
 
 
@@ -20,54 +21,34 @@ class SelfAttentionLayer(nn.Module):
 		self.W_v = nn.Linear(input_size, input_size)
 
 		# Linear transformation for the output of attention heads
-		self.W_o = nn.Linear(input_size, output_size)
+		self.classifier = nn.Sequential(
+			nn.Dropout(p=0.5),
+			nn.Linear(input_size, input_size // 2),
+   			nn.ReLU(inplace=True),
+			nn.Dropout(p=0.5),
+			nn.Linear(input_size // 2, input_size // 4),
+   			nn.ReLU(inplace=True),
+			nn.Dropout(p=0.5),
+			nn.Linear(input_size // 4, output_size)
+		)
+  
 
 
 	def forward(self, x):
+     
 		# Linear transformations for Query, Key, and Value
 		Q = self.W_q(x)
 		K = self.W_k(x)
 		V = self.W_v(x)
-
-		# Split into multiple attention heads
-		Q = self.split_heads(Q)
-		K = self.split_heads(K)
-		V = self.split_heads(V)
 
 		# Scaled dot-product attention
 		attention_scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(self.input_size, dtype=torch.float32))
 		attention_weights = F.softmax(attention_scores, dim=-1)
 		attended_values = torch.matmul(attention_weights, V)
 
-		# Concatenate attention heads
-		attended_values = self.concat_heads(attended_values)
-
-		# Linear transformation for the output
-		outputs = self.W_o(attended_values)
+		outputs = self.classifier(attended_values)
 
 		return outputs, attended_values
-
-
-	def split_heads(self, x):
-		batch_size, features = x.size()
-		head_size = features // self.attention_heads
-
-		x = x.view(batch_size, self.attention_heads, head_size)
-		x = x.permute(0, 2, 1).contiguous()
-		x = x.view(batch_size * self.attention_heads, head_size)
-
-		return x
-
-
-	def concat_heads(self, x):
-		batch_size_heads, head_size = x.size()
-		batch_size = batch_size_heads // self.attention_heads
-
-		x = x.view(batch_size, self.attention_heads, head_size)
-		x = x.permute(0, 2, 1).contiguous()
-		x = x.view(batch_size, self.attention_heads * head_size)
-
-		return x
 	
 	
 
@@ -79,6 +60,7 @@ class Bert_Layer_aggregation(nn.Module):
 		self.pre_trained_bert = bert
 		self.self_attention_layer = SelfAttentionLayer(12 * 768, output_size=2, attention_heads=8)
 		self.freeze_layers()
+		self.self_attention_layer.apply(init_params)
 		
 		
 	def forward(self, x):
@@ -97,12 +79,14 @@ class Bert_Layer_aggregation(nn.Module):
 
 
 class LayerAggregation(Train_Evaluate):
-	def __init__(self, params, dataloaders):
+	def __init__(self, params, dataloaders, timestamp):
 		
 		self.dataloaders = dataloaders
+		self.timestamp = timestamp
+  
 		params['model'] = Bert_Layer_aggregation(params['model'], params['batch_size'])
 		params['embeddings_dim'] = 768 * 12
-		
+
 		super().__init__(self.__class__.__name__, params)
   
 
@@ -113,10 +97,19 @@ class LayerAggregation(Train_Evaluate):
 			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
    
 			# we can for eaxample save these metrics to compare with the additional embedding
-			test_accuracy, test_loss = self.test(dls['test_dl'])
+			_, _ = self.test(dls['test_dl'])
    
 			#self.get_embeddings(ds_name, dls['dataset'], self.embeddings_dim)
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
-			#self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name)
+			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name, self.timestamp)
+   
+
+
+def init_params(m):
+	if isinstance(m, nn.Linear):
+		init.normal_(m.weight, std=1e-3)
+		if m.bias is not None: init.constant_(m.bias, 0)
+	elif isinstance(m, nn.Sequential):
+		for c in list(m.children()): init_params(c)

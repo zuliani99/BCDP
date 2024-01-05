@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from utils import accuracy_score, get_dataloaders, get_datasets
+import datetime
+from utils import accuracy_score, create_ts_dir_res, get_dataloaders, get_datasets
 from transformers import BertTokenizer, BertModel
 
 from approaches.MainApproch import MainApproch
@@ -17,7 +18,7 @@ import torch.nn as nn
 import copy
 
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
@@ -35,6 +36,9 @@ def main():
 
 	loss_fn = nn.CrossEntropyLoss()
  
+	timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+	create_ts_dir_res(timestamp)
+ 
 	params = {
 		'device': device,
 		'batch_size': batch_size,
@@ -44,37 +48,33 @@ def main():
       	'loss_fn': loss_fn,
 		'score_fn': accuracy_score,
 		'patience': patience,
-		'epochs': epochs
+		'epochs': epochs,
 	}
 
 	# our approaches
-	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc)
-	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc)
-	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders)
+	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp)
+	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp)
+	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders, timestamp)
  
 	
 	# competitors
-	bert_linears = BertLinears(copy.deepcopy(params), dataloaders)
+	bert_linears = BertLinears(copy.deepcopy(params), dataloaders, timestamp)
+	bert_lstm = BertLSTM(copy.deepcopy(params), dataloaders, timestamp, bidirectional=False)
+	bert_lstm_bi = BertLSTM(copy.deepcopy(params), dataloaders, timestamp, bidirectional=True)
+	bert_gru = BertGRU(copy.deepcopy(params), dataloaders, timestamp)
  
-	bert_lstm = BertLSTM(copy.deepcopy(params), dataloaders, bidirectional=False)
- 
-	bert_lstm_bi = BertLSTM(copy.deepcopy(params), dataloaders, bidirectional=True)
- 
-	bert_gru = BertGRU(copy.deepcopy(params), dataloaders)
+	# baselines
+	
  
  
  
 	methods = [
 		# our approaches
-		#main_approach,
-		#layer_wise,
-		layer_aggregation,
+		#main_approach, layer_wise, layer_aggregation,
 
 		# competitors
-		#bert_linears,
-		#bert_lstm,
-		#bert_lstm_bi,
-		#bert_gru
+		#bert_linears, 
+  		bert_lstm, bert_lstm_bi, bert_gru
   
 		# baselines
 	]
