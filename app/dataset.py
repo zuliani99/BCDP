@@ -12,7 +12,6 @@ class CustomTextDataset(Dataset):
     def __getitem__(self, idx): 
         encoding = self.tokenizer.encode_plus(
             self.vocab[idx]['text'] if 'text' in self.vocab[idx] else self.vocab[idx]['sentence'],
-            #self.vocab[idx]['text'] if 'text' in list(self.vocab[idx].features.keys()) else self.vocab[idx]['sentence']
 
             truncation=True,
             return_token_type_ids=False,

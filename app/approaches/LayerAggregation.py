@@ -92,7 +92,7 @@ class LayerAggregation(Train_Evaluate):
 
 	def run(self):
 
-		print(f'---------------------------------- START {self.__class__.__name__}----------------------------------')	
+		print(f'---------------------------------- START {self.__class__.__name__} ----------------------------------')	
   
 		for ds_name, dls in self.dataloaders.items():
       
@@ -103,12 +103,13 @@ class LayerAggregation(Train_Evaluate):
 			# we can for eaxample save these metrics to compare with the additional embedding
 			_, _ = self.test(dls['test_dl'])
    
+			#self.get_embeddings(ds_name, dls['dataset'], self.embeddings_dim)
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
 			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name, self.timestamp)
    
-		print(f'\n---------------------------------- END {self.__class__.__name__}----------------------------------\n\n')
+		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
 
    
 

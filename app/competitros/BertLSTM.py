@@ -47,31 +47,32 @@ class BertLSTM(Train_Evaluate):
 		
 		self.dataloaders = dataloaders
 		self.timestamp = timestamp
+		self.custom_name = 'BertLinears_bi' if bidirectional is True else 'BertLinears'
   
 		params['model'] = BertLSTMModel(params['model'], lstm_hidden_size=384, num_classes=2, bidirectional=bidirectional)
 		params['embeddings_dim'] = None
-		super().__init__('BertLinears_bi' if bidirectional is True else 'BertLinears', params)
+		super().__init__(self.custom_name, params)
 		
 
 	def run(self):
      
-		print(f'---------------------------------- START {self.__class__.__name__}----------------------------------')
-
+		print(f'---------------------------------- START {self.custom_name} ----------------------------------')	    
+     
 		for ds_name, dls in self.dataloaders.items():
       
 			print(f'--------------- {ds_name} ---------------')
 			
-			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
-
+			self.fit(ds_name, self.custom_name, dls['train_dl'], dls['val_dl'])
+   
 			test_accuracy, test_loss = self.test(dls['test_dl'])
    
 			# write results
 			write_csv(
                 ts_dir=self.timestamp,
                 head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
-                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
+                values = [self.custom_name, ds_name, test_accuracy, test_loss],
                 categoty_type='competitors'
             )
    
-		print(f'\n---------------------------------- END {self.__class__.__name__}----------------------------------\n\n')
+		print(f'\n---------------------------------- END {self.__class__.__name__ } ----------------------------------\n\n')
    

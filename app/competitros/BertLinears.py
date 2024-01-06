@@ -39,14 +39,14 @@ class BertLinears(Train_Evaluate):
 
 	def run(self):
      
-		print(f'---------------------------------- START {self.__class__.__name__}----------------------------------')
+		print(f'---------------------------------- START {self.__class__.__name__} ----------------------------------')	    
 
 		for ds_name, dls in self.dataloaders.items():
       
 			print(f'--------------- {ds_name} ---------------')
 			
 			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
-
+   
 			test_accuracy, test_loss = self.test(['test_dl'])
    
 			# write results
@@ -56,5 +56,6 @@ class BertLinears(Train_Evaluate):
                 values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
                 categoty_type='competitors'
             )
-
-		print(f'\n---------------------------------- END {self.__class__.__name__}----------------------------------\n\n')
+   
+		print(f'\n---------------------------------- END {self.__class__.__name__ } ----------------------------------\n\n')
+   

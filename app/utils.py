@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader, random_split
 import torch
 from datasets import load_dataset
 
+import numpy as np
+
 import csv
 import os
 import errno
@@ -85,3 +87,17 @@ def create_ts_dir_res(timestamp):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise  # This was not a "directory exist" error..
+        
+        
+        
+def read_embbedings(dataset_name, methods_name):
+
+	path = f'app/embeddings/{dataset_name}/{methods_name}'
+	
+	x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], 0, dtype=np.float32)
+	x_test = np.load(f'{path}/test_embeddings.npy')
+        
+	y_train = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy')], 0, dtype=np.float32)
+	y_test = np.load(f'{path}/test_labels.npy')
+        
+	return x_train, x_test, y_train, y_test

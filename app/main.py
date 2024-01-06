@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import datetime
+from datetime import datetime
 from utils import accuracy_score, create_ts_dir_res, get_dataloaders, get_datasets
 from transformers import BertTokenizer, BertModel
 
@@ -11,6 +11,8 @@ from approaches.LayerAggregation import LayerAggregation
 from competitros.BertLinears import BertLinears
 from competitros.BertLSTM import BertLSTM
 from competitros.BertGRU import BertGRU
+
+from Baselines import Baselines
 
 import torch
 import torch.nn as nn
@@ -33,6 +35,7 @@ def main():
 	model = BertModel.from_pretrained("bert-base-uncased").to(device)
   
 	dataloaders = get_dataloaders(get_datasets(), tokenizer, batch_size)
+	datasets_name = list(dataloaders.keys())
 
 	loss_fn = nn.CrossEntropyLoss()
  
@@ -56,6 +59,9 @@ def main():
 	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp)
 	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders, timestamp)
  
+ 
+	our_approaces_names = [main_approach.__class__.__name__, layer_wise.__class__.__name__, layer_aggregation.__class__.__name__, ]
+ 
 	
 	# competitors
 	bert_linears = BertLinears(copy.deepcopy(params), dataloaders, timestamp)
@@ -64,18 +70,19 @@ def main():
 	bert_gru = BertGRU(copy.deepcopy(params), dataloaders, timestamp)
  
 	# baselines
-	
+	baselines = Baselines(datasets_name, timestamp, our_approaces_names)
  
  
  
 	methods = [
 		# our approaches
-		main_approach, layer_wise, layer_aggregation,
+		#main_approach, layer_wise, layer_aggregation,
 
 		# competitors
-		bert_linears, bert_lstm, bert_lstm_bi, bert_gru
+		bert_linears, bert_lstm, bert_lstm_bi, bert_gru,
   
 		# baselines
+		#baselines
 	]
  
 	for method in methods:

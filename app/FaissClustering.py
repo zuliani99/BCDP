@@ -4,53 +4,23 @@ import numpy as np
 import faiss
 from tqdm.auto import tqdm
 
-from utils import write_csv
+from utils import read_embbedings, write_csv
 
 class FaissClustering():
     def __init__(self):
         self.n_clusters_list = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
         self.top_k_list = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         self.size_split = 0.2
- 
-
-    def get_embbedings_and_labels(self, dataset_name, methods_name):
-
-        path = f'app/embeddings/{dataset_name}/{methods_name}'
-        #embds = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy'), np.load(f'{path}/test_embeddings.npy')], 0, dtype=np.float32)
-        #sents = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy'), np.load(f'{path}/test_labels.npy')], 0, dtype=np.float32)
-        #x_train, x_test, y_train, y_test = train_test_split(embds, sents, test_size=self.size_split, random_state=42)
-        x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], 0, dtype=np.float32)
-        x_test = np.load(f'{path}/test_embeddings.npy')
-        
-        y_train = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy')], 0, dtype=np.float32)
-        y_test = np.load(f'{path}/test_labels.npy')
-        
-        return x_train, x_test, y_train, y_test
 
 
 
-    # standard_k_means: (standard k-means clustering algorithm)
-    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters]
+    # standard_k_means: (k-means clustering algorithm)
+    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperica: boolean
     # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
-    def standard_k_means(self, sentences, n_clusters):
+    def standard_k_means(self, sentences, n_clusters, spherical=False):
 
         clustering = faiss.Kmeans(sentences.shape[1], n_clusters,
-                                spherical=False,
-                                gpu=True)
-        clustering.train(sentences)
-
-        _, label_clustering = clustering.index.search(sentences, 1)
-
-        return clustering.centroids, label_clustering
-
-
-    # spherical_k_means: (spherical k-means clustering algorithm)
-    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters]
-    # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
-    def spherical_k_means(self, sentences, n_clusters):
-
-        clustering = faiss.Kmeans(sentences.shape[1], n_clusters,
-                                spherical=True,
+                                spherical=spherical,
                                 gpu=True)
         clustering.train(sentences)
 
@@ -105,7 +75,7 @@ class FaissClustering():
 
     def run_faiss_kmeans(self, dataset_name, methods_name, spherical = False):
 
-        x_train, x_test, y_train, y_test = self.get_embbedings_and_labels(dataset_name, methods_name)
+        x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
 
         for n_clusters in self.n_clusters_list:
             centroids, label_clustering = self.spherical_k_means(x_train, n_clusters) if spherical else self.standard_k_means(x_train, n_clusters)
@@ -125,12 +95,3 @@ class FaissClustering():
                         categoty_type='our_approaches'
                     )
                     
-            #print('\n\n')
-            
-            
-            '''write_csv(
-                ts_dir=self.timestamp,
-                head = ['method', 'dataset', 'test_accuracy', 'test_loss'],
-                values = [self.__class__.__name__, ds_name, test_accuracy, test_loss],
-                categoty_type='our_approaches'
-            )'''
