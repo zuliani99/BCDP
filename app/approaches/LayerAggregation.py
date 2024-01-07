@@ -107,7 +107,7 @@ class LayerAggregation(Train_Evaluate):
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
-			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__calss__.__name, self.timestamp)
+			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp)
    
 		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
 
