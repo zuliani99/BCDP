@@ -4,7 +4,7 @@ import numpy as np
 import faiss
 from tqdm.auto import tqdm
 
-from utils import read_embbedings, write_csv
+from utils import accuracy_result, read_embbedings, write_csv
 
 class FaissClustering():
     def __init__(self):
@@ -63,15 +63,6 @@ class FaissClustering():
 
 
 
-    def accuracy_result(model_results, ground_truth):
-        result_list = 0
-        for i in range(ground_truth.shape[0]):
-            if model_results[i] == ground_truth[i]:
-                result_list += 1
-        return result_list/ground_truth.shape[0]
-
-
-
 
     def run_faiss_kmeans(self, dataset_name, methods_name, spherical = False):
 
@@ -85,7 +76,7 @@ class FaissClustering():
                 if top_k < n_clusters:
                     query_result = self.get_result(x_test, centroids,
                                             sentiment_centroids, top_k=top_k)
-                    test_accuracy = self.accuracy_result(query_result, y_test)
+                    test_accuracy = accuracy_result(query_result, y_test)
                     #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
 
                     write_csv(

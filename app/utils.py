@@ -101,3 +101,11 @@ def read_embbedings(dataset_name, methods_name):
 	y_test = np.load(f'{path}/test_labels.npy')
         
 	return x_train, x_test, y_train, y_test
+
+
+def accuracy_result(model_results, ground_truth):
+    result_list = 0
+    for i in range(ground_truth.shape[0]):
+        if model_results[i] == ground_truth[i]:
+            result_list += 1
+    return result_list/ground_truth.shape[0]
