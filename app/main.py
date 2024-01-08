@@ -19,7 +19,7 @@ import torch.nn as nn
 
 import copy
 
-
+spherical_kmenas = True
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
@@ -55,9 +55,9 @@ def main():
 	}
 
 	# our approaches
-	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp)
-	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp)
-	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders, timestamp)
+	main_approach = MainApproch(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp, spherical_kmenas)
+	layer_wise = LayerWise(device, dataloaders, model, tokenizer, embedding_split_perc, timestamp, spherical_kmenas)
+	layer_aggregation = LayerAggregation(copy.deepcopy(params), dataloaders, timestamp, spherical_kmenas)
  
  
 	our_approaces_names = [main_approach.__class__.__name__, layer_wise.__class__.__name__, layer_aggregation.__class__.__name__, ]

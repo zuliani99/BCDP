@@ -133,7 +133,7 @@ class FaissClustering():
 
 
 
-    def run_faiss_kmeans(self, dataset_name, methods_name, spherical = False):
+    def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, spherical = False):
 
         x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
 
@@ -152,7 +152,7 @@ class FaissClustering():
                     #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
 
                     write_csv(
-                        ts_dir=self.timestamp,
+                        ts_dir = timestamp,
                         head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure'],
                         values = [methods_name, dataset_name, test_accuracy, confidence, harmonic_mean],
                         categoty_type='our_approaches'

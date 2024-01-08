@@ -16,7 +16,7 @@ class BertLayersWise(nn.Module):
 
 
 class LayerWise(ClusteringEmbeddings):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, timestamp):
+	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, timestamp, spherical_kmenas):
 		
 		super().__init__(self.__class__.__name__, embedding_split_perc,
                          device, tokenizer, BertLayersWise(model).to(device),
@@ -24,6 +24,7 @@ class LayerWise(ClusteringEmbeddings):
   
 		self.dataloaders = dataloaders
 		self.timestamp = timestamp
+		self.spherical_kmenas = spherical_kmenas
 
   
 	def run(self):
@@ -37,7 +38,7 @@ class LayerWise(ClusteringEmbeddings):
 			self.get_embeddings(ds_name, dls)
    
 			# run clusering
-			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp)
+			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp, self.spherical_kmenas)
 	
 		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
    
