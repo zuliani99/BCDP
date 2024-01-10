@@ -113,6 +113,26 @@ class FaissClustering():
             if model_results[i] == ground_truth[i]: true_p += 1
             else: false_p += 1
         return true_p/(true_p + false_p)
+    
+    def recall(model_results, ground_truth):
+        """ measures the ability of the model to correctly identify all relevant instances
+            @input:
+                int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
+                    int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
+                @output:
+                    int: the corresponding recall
+        """
+        true_p = 0
+        false_n = 0
+        indices = np.where(model_results == 1)
+        for i in indices:
+            if model_results[i] == ground_truth[i]: true_p += 1
+        
+        indices_n = np.where(model_results == 0)
+        for i in indices_n:
+            if model_results[i] != ground_truth[i]: false_n += 1
+        
+        return true_p /(true_p+false_n)
 
 
 
