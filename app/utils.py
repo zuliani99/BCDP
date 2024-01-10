@@ -92,10 +92,10 @@ def create_ts_dir_res(timestamp):
         
 def read_embbedings(dataset_name, methods_name):
 
-	path = f'app/embeddings/{dataset_name}/{methods_name}'
+	path = f'app/embeddings/{dataset_name}'
 	
-	x_train = np.concatenate([np.load(f'{path}/embeddings_dl_labels.npy'), np.load(f'{path}/embeddings_val_dl.npy')], 0, dtype=np.float32)
-	x_test = np.load(f'{path}/test_embeddings.npy')
+	x_train = np.concatenate([np.load(f'{path}/{methods_name}/embeddings_train_dl.npy'), np.load(f'{path}/{methods_name}/embeddings_val_dl.npy')], 0, dtype=np.float32)
+	x_test = np.load(f'{path}/{methods_name}/embeddings_test_dl.npy')
         
 	y_train = np.concatenate([np.load(f'{path}/train_dl_labels.npy'), np.load(f'{path}/val_dl_labels.npy')], 0, dtype=np.float32)
 	y_test = np.load(f'{path}/test_dl_labels.npy')

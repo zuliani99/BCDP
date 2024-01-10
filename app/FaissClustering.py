@@ -16,7 +16,7 @@ class FaissClustering():
     # standard_k_means: (k-means clustering algorithm)
     # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperica: boolean
     # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
-    def standard_k_means(self, sentences, n_clusters, spherical=False):
+    def k_means(self, sentences, n_clusters, spherical=False):
 
         clustering = faiss.Kmeans(sentences.shape[1], n_clusters,
                                 spherical=spherical,
@@ -44,7 +44,7 @@ class FaissClustering():
 
 
 
-    def confidence(n_clusters, label_clustering, sentiment):
+    def confidence(self, n_clusters, label_clustering, sentiment):
         """" measures the purity of each cluster as proposed by @Vascon 2013
         @input:
             int n_clusters: number of clusters
@@ -88,7 +88,7 @@ class FaissClustering():
 
 
 
-    def accuracy_result(model_results, ground_truth):
+    def accuracy_result(self, model_results, ground_truth):
         result_list = 0
         for i in range(ground_truth.shape[0]):
             if model_results[i] == ground_truth[i]:
@@ -98,7 +98,7 @@ class FaissClustering():
 
 
 
-    def precision(model_results, ground_truth):
+    def precision(self, model_results, ground_truth):
         """ calculates the precision of the predictions, i. e. the accuracy of the positive predictions
         @input:
             int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
@@ -114,7 +114,8 @@ class FaissClustering():
             else: false_p += 1
         return true_p/(true_p + false_p)
     
-    def recall(model_results, ground_truth):
+    
+    def recall(self, model_results, ground_truth):
         """ measures the ability of the model to correctly identify all relevant instances
             @input:
                 int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
@@ -137,7 +138,7 @@ class FaissClustering():
 
 
 
-    def F1(model_results, ground_truth):
+    def F1(self, model_results, ground_truth):
         """ calculates the F1-measure, i.e the harmonic mean between precision and recall, of the predictions
         @input:
             int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
@@ -158,7 +159,8 @@ class FaissClustering():
         x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
 
         for n_clusters in self.n_clusters_list:
-            centroids, label_clustering = self.spherical_k_means(x_train, n_clusters) if spherical else self.standard_k_means(x_train, n_clusters)
+            
+            centroids, label_clustering = self.k_means(x_train, n_clusters, spherical)
             confidence = self.confidence(n_clusters, label_clustering, y_train)
             sentiment_centroids = self.label_centroids(n_clusters, centroids,
                                                 label_clustering, y_train)
@@ -169,7 +171,8 @@ class FaissClustering():
                                             sentiment_centroids, top_k=top_k)
                     test_accuracy = self.accuracy_result(query_result, y_test)
                     harmonic_mean = self.F1(query_result, y_test)
-                    #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
+                    
+                    print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
 
                     write_csv(
                         ts_dir = timestamp,
