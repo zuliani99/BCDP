@@ -104,7 +104,7 @@ class FaissClustering():
             int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
             int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
         @output:
-            int: the corresponding prediction
+            int: the corresponding precision
         """
         true_p = 0
         false_p = 0
