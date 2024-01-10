@@ -162,13 +162,11 @@ class FaissClustering():
             
             centroids, label_clustering = self.k_means(x_train, n_clusters, spherical)
             confidence = self.confidence(n_clusters, label_clustering, y_train)
-            sentiment_centroids = self.label_centroids(n_clusters, centroids,
-                                                label_clustering, y_train)
+            sentiment_centroids = self.label_centroids(n_clusters, label_clustering, y_train)
 
             for top_k in self.top_k_list:
                 if top_k < n_clusters:
-                    query_result = self.get_result(x_test, centroids,
-                                            sentiment_centroids, top_k=top_k)
+                    query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k)
                     test_accuracy = self.accuracy_result(query_result, y_test)
                     harmonic_mean = self.F1(query_result, y_test)
                     

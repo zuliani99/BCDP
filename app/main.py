@@ -20,7 +20,7 @@ import torch.nn as nn
 import copy
 
 
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
@@ -76,7 +76,8 @@ def main():
  
 	methods = [
 		# our approaches
-		main_approach, layer_wise, layer_aggregation,
+
+		main_approach,#, layer_wise, layer_aggregation,
 
 		# competitors
 		#bert_linears, bert_lstm, bert_lstm_bi, bert_gru,
