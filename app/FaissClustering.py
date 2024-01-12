@@ -108,7 +108,7 @@ class FaissClustering():
         """
         true_p = 0
         false_p = 0
-        indices = np.where(model_results == 1)
+        indices = np.where(model_results == 1)[0]
         for i in indices:
             if model_results[i] == ground_truth[i]: true_p += 1
             else: false_p += 1
@@ -125,11 +125,11 @@ class FaissClustering():
         """
         true_p = 0
         false_n = 0
-        indices = np.where(model_results == 1)
+        indices = np.where(model_results == 1)[0]
         for i in indices:
             if model_results[i] == ground_truth[i]: true_p += 1
         
-        indices_n = np.where(model_results == 0)
+        indices_n = np.where(model_results == 0)[0]
         for i in indices_n:
             if model_results[i] != ground_truth[i]: false_n += 1
         
