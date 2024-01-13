@@ -145,8 +145,8 @@ class FaissClustering():
             int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
         @output:
             int tuple: (precision, recall, F1-measure) """
-        precision = precision(model_results, ground_truth)
-        recall = recall(model_results, ground_truth)
+        precision = self.precision(model_results, ground_truth)
+        recall = self.recall(model_results, ground_truth)
         F1 = 2*precision*recall/(precision + recall)
 
         return (precision, recall, F1)
