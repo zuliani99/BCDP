@@ -104,7 +104,7 @@ class FaissClustering():
             int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
             int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
         @output:
-            int: the corresponding precision
+            int: the corresponding precision, returns 0 if the denominator evaluates to 0
         """
         true_p = 0
         false_p = 0
@@ -112,7 +112,7 @@ class FaissClustering():
         for i in indices:
             if model_results[i] == ground_truth[i]: true_p += 1
             else: false_p += 1
-        return true_p/(true_p + false_p)
+        return true_p/(true_p + false_p) if true_p + false_p != 0 else 0
     
     
     def recall(self, model_results, ground_truth):
@@ -121,7 +121,7 @@ class FaissClustering():
                 int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
                     int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
                 @output:
-                    int: the corresponding recall
+                    int: the corresponding recall, 0 if the denominator evaluates to 0
         """
         true_p = 0
         false_n = 0
@@ -133,7 +133,7 @@ class FaissClustering():
         for i in indices_n:
             if model_results[i] != ground_truth[i]: false_n += 1
         
-        return true_p /(true_p+false_n)
+        return true_p /(true_p+false_n) if true_p + false_n != 0 else 0
 
 
 
