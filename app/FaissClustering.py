@@ -14,7 +14,7 @@ class FaissClustering():
 
 
     # standard_k_means: (k-means clustering algorithm)
-    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperica: boolean
+    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperical: boolean
     # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
     def k_means(self, sentences, n_clusters, spherical=False):
         """ corresponds to the standard k-means clustering algorithm
