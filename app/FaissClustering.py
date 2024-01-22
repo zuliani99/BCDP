@@ -17,6 +17,15 @@ class FaissClustering():
     # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperica: boolean
     # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
     def k_means(self, sentences, n_clusters, spherical=False):
+        """ corresponds to the standard k-means clustering algorithm
+        @param sentences: numpy.ndarray, real matrix where each row corresponds to the embeddings of the sentence
+        @param n_clusters: int, desired number of clusters (k)
+        @param spherical: boolean,  controls whether to use the spherical k-means, default is False
+            
+        @return:
+            centroids: numpy.ndarray, real matrix, each row correponds to the centroid of one cluster
+            label_clustering: Integer vector where each element represents the cluster label for the corresponding sentence
+        """
 
         clustering = faiss.Kmeans(sentences.shape[1], n_clusters,
                                 spherical=spherical,
@@ -33,6 +42,15 @@ class FaissClustering():
     # label_clustering [int vector, for each cell the cluster of the sentence], sentiment [-1 or +1 vector, that is the sentiment of each sentence]
     # output: [-1 or 1 vector, that is the sentiment of each centroid]
     def label_centroids(self, n_clusters, label_clustering, sentiment):
+        """ Determines the sentiment of each cluster centroid based on the majority sentiment of its assigned sentences
+        @param n_clusters: int, number of distinct clusters
+        @param label_clustering: Integer vector where each element represents the cluster label for the corresponding sentence
+        @param sentiment: Integer vector, only values -1 or 1, corresponding sentiment of each sentence
+        
+        @return:
+            Integer vector, only values -1 or 1, contains the sentiment of each centroid
+
+        """
         centroids_sentiment = []
         for i in tqdm(range(n_clusters)):
             indices = np.where(label_clustering == i)[0]
@@ -46,12 +64,13 @@ class FaissClustering():
 
     def confidence(self, n_clusters, label_clustering, sentiment):
         """" measures the purity of each cluster as proposed by @Vascon 2013
-        @input:
-            int n_clusters: number of clusters
-            int vector label_clustering: corresponding cluster of each sentence
-            int vector: only values -1 or 1; corresponding sentiment of each sentence
-        @output:
-            np array confidence: purity value of the cluster; 0 if both classes are equally often present in the cluster, 1 if only one class is present"""
+
+        @param n_clusters: int, number of clusters
+        @param label_clustering: Integer vector, corresponding cluster of each sentence
+        @param sentiment: Integer vector, only values -1 or 1, corresponding sentiment of each sentence
+
+        @return:
+            confidence: numpy.ndarray, purity value of the cluster; 0 if both classes are equally often present in the cluster, 1 if only one class is present"""
 
         confidence = np.zeros(n_clusters)
 
@@ -76,6 +95,15 @@ class FaissClustering():
     # top_k [int, top k cluster centroids that we consider for our final result]
     # output: [-1 or 1 vector, where for each query we have the related label]
     def get_result(self, queries, centroids, centroids_labeled, top_k=1):
+        """ computes the sentiment for each query based on the clustering
+        @param queries: numpy.ndarray, Real matrix storing in each row a query embedding
+        @param centroids: numpy.ndarray, Real matrix storing in each row a centroid embedding
+        @param centroids_labeled: Integer vector, only values -1 or 1, contains the sentiment of each centroid
+        @param top_k: int, number of cluster centroids that should be considered for the final result, default is 1
+
+        @return:
+            Integer vector, only values -1 or 1, the corresponding sentiment for each query
+        """
 
         def compute_result(query, centroids=centroids,
                         centroids_labeled=centroids_labeled, top_k=top_k):
@@ -89,6 +117,14 @@ class FaissClustering():
 
 
     def accuracy_result(self, model_results, ground_truth):
+        """ calculates the accuarcy of the model's predictions
+
+        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
+        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
+
+        @return:
+            the accuracy of the predictions
+        """
         result_list = 0
         for i in range(ground_truth.shape[0]):
             if model_results[i] == ground_truth[i]:
@@ -100,11 +136,12 @@ class FaissClustering():
 
     def precision(self, model_results, ground_truth):
         """ calculates the precision of the predictions, i. e. the accuracy of the positive predictions
-        @input:
-            int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
-            int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
-        @output:
-            int: the corresponding precision, returns 0 if the denominator evaluates to 0
+        
+        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
+        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
+
+        @return:
+            the corresponding precision as float, returns 0 if the denominator evaluates to 0
         """
         true_p = 0
         false_p = 0
@@ -117,11 +154,12 @@ class FaissClustering():
     
     def recall(self, model_results, ground_truth):
         """ measures the ability of the model to correctly identify all relevant instances
-            @input:
-                int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
-                    int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
-                @output:
-                    int: the corresponding recall, 0 if the denominator evaluates to 0
+
+        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
+        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
+
+        @return:
+            the corresponding recall as float, 0 if the denominator evaluates to 0
         """
         true_p = 0
         false_n = 0
@@ -140,11 +178,11 @@ class FaissClustering():
 
     def F1(self, model_results, ground_truth):
         """ calculates the F1-measure, i.e the harmonic mean between precision and recall, of the predictions
-        @input:
-            int vector model_results: contains only the values -1 and 1, predicted sentiment for all sentences
-            int vector ground_truth: contains only the values -1 and 1, actual sentiment for all sentences
-        @output:
-            int tuple: (precision, recall, F1-measure) """
+        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
+        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
+            
+        @return:
+            precision, recall, F1 of the model """
         precision = self.precision(model_results, ground_truth)
         recall = self.recall(model_results, ground_truth)
         F1 = 2*precision*recall/(precision + recall)
@@ -155,6 +193,15 @@ class FaissClustering():
 
 
     def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, spherical = False):
+        """ performs the clustering and the predictions of the model, evaluating its accuracy and F1-measure and the confidence of the clusters
+
+        @param dataset_name: str, dataset to be used in the run
+        @param methods_name: str, method to be used in the run
+        @param timestamp: str, timestamp to identify and store the run
+        @param spherical: boolean, determines whether spherical k-means is performed or not, default is False
+
+        @return: None
+        """
 
         x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
 
