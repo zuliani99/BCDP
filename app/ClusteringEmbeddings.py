@@ -20,6 +20,13 @@ class ClusteringEmbeddings(object):
 	 
 
 	def get_embeddings(self, ds_name, dataloaders):
+		""" retrieve the embeddings for a given dataset using the specified dataloaders. Embeddings and labels are stored in npy files for later use
+
+		@param ds_name: str, name of the dataset for which embeddings are to be obtained
+		@param dataloaders: dict, contains dataloaders for different subsets of the dataset
+
+		@Return: None
+		"""
 		
 		print('OBTAINING THE EMBEDDINGS:')
      
