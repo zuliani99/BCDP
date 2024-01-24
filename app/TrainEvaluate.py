@@ -27,6 +27,15 @@ class Train_Evaluate(ClusteringEmbeddings):
 
 
 	def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
+		""" Save the best model checkpoint along with relevant training information.
+
+		@param filename: str, the filename to which the checkpoint should be saved
+		@param actual_patience: int, the current patience value during training
+		@param epoch: int, the current epoch number
+		@param best_val_loss: float, best validation loss achieved during training
+
+		@Return: None
+		"""
 
 		checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict(),
                       'actual_patience': actual_patience, 'epoch': epoch, 'best_val_loss': best_val_loss}
@@ -35,6 +44,13 @@ class Train_Evaluate(ClusteringEmbeddings):
 
 
 	def __load_checkpoint(self, filename):
+		""" Load a model checkpoint from a specified file 
+
+		@param filename: str, the filename from which to load the model checkpoint
+
+		@Return: tuple [int, int, float] containing the values for actual_patience, epoch and best_val_loss from the loaded checkpoint
+
+		"""
 
 		checkpoint = torch.load(filename, map_location=self.device)
 		self.model.load_state_dict(checkpoint['state_dict'])
@@ -47,6 +63,14 @@ class Train_Evaluate(ClusteringEmbeddings):
 
 
 	def evaluate(self, val_dl, epoch = 0, epochs = 0):
+		"""Evaluate the model's performance on a validation dataset.
+		@param val_dl: the data loader for the validation dataset
+		@param epoch: int, the current epoch number, default is 0
+		@param epochs: int, the total number of training epochs, default is 0
+
+		@Return: a tuple containing the computed validation accuracy and loss
+
+		"""
 		val_accuracy, val_loss = .0, .0
 
 		self.model.eval()
@@ -83,6 +107,12 @@ class Train_Evaluate(ClusteringEmbeddings):
 	
 
 	def test(self, test_dl):
+		""" Evaluate the model's performance on a test dataset and print the results.
+		@param test_dl: the data loader for the test dataset
+
+		@Return: a tuple containing the computed test accuracy and loss
+		
+		"""
 		test_accuracy, test_loss = self.evaluate(test_dl)
 
 		print('\nTESTING RESULTS -> test_accuracy: {:.6f}, test_loss: {:.6f} \n'.format(test_accuracy, test_loss))
