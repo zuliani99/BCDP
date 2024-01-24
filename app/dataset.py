@@ -10,6 +10,14 @@ class CustomTextDataset(Dataset):
         return len(self.vocab)
     
     def __getitem__(self, idx): 
+        """ retrieve a specific item of the dataset
+
+        @param idx: int, the index of the item to be retrieved
+
+        @Return:
+            - a dictionary containing the input-ids and the attention masks
+            - the label associated with the item
+        """
         encoding = self.tokenizer.encode_plus(
             self.vocab[idx]['text'] if 'text' in self.vocab[idx] else self.vocab[idx]['sentence'],
 
