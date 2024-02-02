@@ -79,11 +79,10 @@ class Bert_Layer_aggregation(nn.Module):
 
 
 class LayerAggregation(Train_Evaluate):
-	def __init__(self, params, dataloaders, timestamp, spherical_kmenas):
+	def __init__(self, params, dataloaders, timestamp):
 		
 		self.dataloaders = dataloaders
 		self.timestamp = timestamp
-		self.spherical_kmenas = spherical_kmenas
   
 		params['model'] = Bert_Layer_aggregation(params['model'], params['batch_size'])
 		params['embeddings_dim'] = 768 * 12
@@ -99,16 +98,16 @@ class LayerAggregation(Train_Evaluate):
       
 			print(f'--------------- {ds_name} ---------------')
 
-			self.fit(ds_name, self.__class__.__name__, dls['train_dl'], dls['val_dl'])
+			self.fit(ds_name, self.__class__.__name__, dls['train'], dls['val'])
    
 			# we can for eaxample save these metrics to compare with the additional embedding
-			_, _ = self.test(dls['test_dl'])
+			_, _ = self.test(dls['test'])
    
 			#self.get_embeddings(ds_name, dls['dataset'], self.embeddings_dim)
 			self.get_embeddings(ds_name, dls)
 			
 			# run clusering
-			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp, self.spherical_kmenas)
+			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name, self.timestamp)
    
 		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
 

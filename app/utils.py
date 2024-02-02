@@ -1,8 +1,5 @@
 
-from dataset import CustomTextDataset
-
 from torch.nn.utils.rnn import pad_sequence
-from torch.utils.data import DataLoader, random_split
 
 import torch
 from datasets import load_dataset
@@ -38,50 +35,24 @@ def collate_fn(batch):
 	return {'input_ids': input_ids, 'attention_mask': attention_mask}, labels
 
 
-def get_dataloaders(datasets_dict, tokenizer, batch_size):
-	
-	datalaoders = {}
-	
-	for ds_name, dataset in datasets_dict.items():
-
-		datalaoders[ds_name] = {}
-			
-		train_ds = CustomTextDataset(dataset['train'], tokenizer)
-		if ds_name == 'sst2': test_ds = CustomTextDataset(dataset['validation'], tokenizer)
-		else: test_ds = CustomTextDataset(dataset['test'], tokenizer)
-   
-		train_size = len(train_ds)
-
-		val_size = int(train_size * 0.2)
-		train_size -= val_size
-
-		train_data, val_data = random_split(train_ds, [int(train_size), int(val_size)])
-	
-		datalaoders[ds_name]['train'] = DataLoader(train_data, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, pin_memory=True)
-		datalaoders[ds_name]['val'] = DataLoader(val_data, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, pin_memory=True)
-   
-		datalaoders[ds_name]['test'] = DataLoader(test_ds, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, pin_memory=True)
-		
-	
-	return datalaoders
-
 
 def write_csv(ts_dir, head, values, categoty_type):
-    if (not os.path.exists(f'results/{ts_dir}/{categoty_type}_results.csv')):
+    if (not os.path.exists(f'app/results/{ts_dir}/{categoty_type}_results.csv')):
         
-        with open(f'results/{ts_dir}/{categoty_type}_results.csv', 'w', encoding='UTF8') as f:
+        with open(f'app/results/{ts_dir}/{categoty_type}_results.csv', 'w', encoding='UTF8') as f:
             writer = csv.writer(f)
             writer.writerow(head)
             f.close()
     
-    with open(f'results/{ts_dir}/{categoty_type}_results.csv', 'a', encoding='UTF8') as f:
+    with open(f'app/results/{ts_dir}/{categoty_type}_results.csv', 'a', encoding='UTF8') as f:
         writer = csv.writer(f)
         writer.writerow(values)
         f.close()
         
         
 def create_ts_dir_res(timestamp):
-    mydir = os.path.join('results', timestamp) #results
+    
+    mydir = os.path.join('app/results', timestamp) #results
     try:
         os.makedirs(mydir)
     except OSError as e:
@@ -97,10 +68,11 @@ def read_embbedings(dataset_name, methods_name):
 	x_train = np.concatenate([np.load(f'{path}/{methods_name}/train_embeddings.npy'), np.load(f'{path}/{methods_name}/val_embeddings.npy')], 0, dtype=np.float32)
 	x_test = np.load(f'{path}/{methods_name}/test_embeddings.npy')
         
-	y_train = np.concatenate([np.load(f'{path}/train_dl_labels.npy'), np.load(f'{path}/val_dl_labels.npy')], 0, dtype=np.float32)
-	y_test = np.load(f'{path}/test_dl_labels.npy')
+	y_train = np.concatenate([np.load(f'{path}/train_labels.npy'), np.load(f'{path}/val_labels.npy')], 0)
+	y_test = np.load(f'{path}/test_labels.npy')
         
 	return x_train, x_test, y_train, y_test
+
 
 
 def accuracy_result(model_results, ground_truth):

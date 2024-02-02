@@ -13,14 +13,13 @@ class BertLastLayer(nn.Module):
 	
 
 class MainApproch(ClusteringEmbeddings):
-	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, timestamp, spherical_kmenas):
+	def __init__(self, device, dataloaders, model, tokenizer, embedding_split_perc, timestamp):
 		ClusteringEmbeddings.__init__(self, self.__class__.__name__, embedding_split_perc,
                          device, tokenizer, BertLastLayer(model).to(device),
                          embeddings_dim = 768)
 		
 		self.dataloaders = dataloaders
 		self.timestamp = timestamp
-		self.spherical_kmenas = spherical_kmenas
 
   
 	def run(self):
@@ -34,6 +33,6 @@ class MainApproch(ClusteringEmbeddings):
 			self.get_embeddings(ds_name, dls)
    
 			# run clusering
-			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp, self.spherical_kmenas)
+			self.faiss_clusering.run_faiss_kmeans(ds_name, self.__class__.__name__, self.timestamp)
 
-		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
+		print(f'\n---------------------------------- END {self.__class__.__name__ } ----------------------------------\n\n')

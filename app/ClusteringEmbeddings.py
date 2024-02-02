@@ -20,13 +20,6 @@ class ClusteringEmbeddings(object):
 	 
 
 	def get_embeddings(self, ds_name, dataloaders):
-		""" retrieve the embeddings for a given dataset using the specified dataloaders. Embeddings and labels are stored in npy files for later use
-
-		@param ds_name: str, name of the dataset for which embeddings are to be obtained
-		@param dataloaders: dict, contains dataloaders for different subsets of the dataset
-
-		@Return: None
-		"""
 		
 		print('OBTAINING THE EMBEDDINGS:')
      
@@ -35,42 +28,40 @@ class ClusteringEmbeddings(object):
 		for dl_name, dataloader in dataloaders.items():
 
 			save_labels_npy, save_embeddings_npy = False, False
-			
+
 			if not os.path.exists(f'app/embeddings/{ds_name}/{dl_name}_labels.npy'): save_labels_npy = True
 			if not os.path.exists(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy'): save_embeddings_npy = True
 
+
 			if not save_labels_npy and not save_embeddings_npy: continue
 
-
-			pbar = tqdm(enumerate(dataloader), total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
+			#pbar = tqdm(enumerate(dataloader), total = len(dataloader), leave=False, desc=f'Obtaining embedding for {ds_name} - {dl_name}')
    
-   
-			labels_npy = np.empty((0))
+			labels_npy = np.empty((0), dtype=np.int8)
 			embeddings_tensor = torch.empty((0, self.embeddings_dim)).to(self.device)
    
 			with torch.inference_mode(): # Allow inference mode
-				for idx, (dictionary, labels) in pbar:
-        
-					for key in list(dictionary.keys()):
-						dictionary[key] = dictionary[key].to(self.device)
+				for idx, (dictionary, labels) in enumerate(dataloader):
 					
 					if save_labels_npy:
 						labels_npy = np.append(labels_npy, np.array([-1 if x == 0 else x for x in torch.squeeze(labels).numpy()]))
 
 					if save_embeddings_npy:
+						for key in list(dictionary.keys()):
+							dictionary[key] = dictionary[key].to(self.device)
+         
 						if self.name == 'LayerAggregation':
 							_, embeds = self.model(dictionary)
 						else:
 							embeds = self.model(dictionary)
        
-					if save_embeddings_npy:
 						embeddings_tensor = torch.cat((embeddings_tensor, embeds), dim=0)
 
 						if(idx % 100 == 0):
 							if not os.path.exists(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy'):
 								np.save(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy',
-														embeddings_tensor.cpu().detach().numpy()
-													)
+											embeddings_tensor.cpu().detach().numpy()
+										)
 
 							else:
 								prev_embeddings = np.load(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy')
@@ -82,6 +73,8 @@ class ClusteringEmbeddings(object):
 				if save_labels_npy: np.save(f'app/embeddings/{ds_name}/{dl_name}_labels.npy', labels_npy)
 				if save_embeddings_npy and (idx % 100 != 0):
 					prev_embeddings = np.load(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy')
-					np.save(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy', np.vstack((prev_embeddings, embeddings_tensor.cpu().detach().numpy())))
+					np.save(f'app/embeddings/{ds_name}/{self.name}/{dl_name}_embeddings.npy',
+             				np.vstack((prev_embeddings, embeddings_tensor.cpu().detach().numpy()))
+                 	)
 
 		print('	-> DONE')

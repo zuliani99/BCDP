@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from utils import accuracy_score, create_ts_dir_res, get_dataloaders, get_datasets
-from transformers import BertTokenizer, BertModel
+
+from utils import accuracy_score, create_ts_dir_res, get_datasets
+from TextDataset import get_dataloaders
 
 from approaches.MainApproch import MainApproch
 from approaches.LayerWise import LayerWise
@@ -16,11 +17,12 @@ from Baselines import Baselines
 
 import torch
 import torch.nn as nn
+from transformers import BertTokenizer, BertModel
 
 import copy
 
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def main():
@@ -29,7 +31,7 @@ def main():
     
 	batch_size = 64
 	epochs = 5
-	patience = 3
+	patience = 2
 
 	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 	model = BertModel.from_pretrained("bert-base-uncased").to(device)
@@ -64,10 +66,10 @@ def main():
  
 	
 	# competitors
-	bert_linears = BertLinears(copy.deepcopy(params), dataloaders, timestamp)
+	'''bert_linears = BertLinears(copy.deepcopy(params), dataloaders, timestamp)
 	bert_lstm = BertLSTM(copy.deepcopy(params), dataloaders, timestamp, bidirectional=False)
 	bert_lstm_bi = BertLSTM(copy.deepcopy(params), dataloaders, timestamp, bidirectional=True)
-	bert_gru = BertGRU(copy.deepcopy(params), dataloaders, timestamp)
+	bert_gru = BertGRU(copy.deepcopy(params), dataloaders, timestamp)'''
  
 	# baselines
 	baselines = Baselines(datasets_name, timestamp, our_approaces_names)
@@ -76,8 +78,7 @@ def main():
  
 	methods = [
 		# our approaches
-
-		main_approach,#, layer_wise, layer_aggregation,
+    	main_approach, layer_wise, layer_aggregation,
 
 		# competitors
 		#bert_linears, bert_lstm, bert_lstm_bi, bert_gru,

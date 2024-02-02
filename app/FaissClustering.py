@@ -13,9 +13,6 @@ class FaissClustering():
 
 
 
-    # standard_k_means: (k-means clustering algorithm)
-    # input: sentences [real matrix, where for each row we have the embedding of the sentence], n_clusters [int, number of clusters], shperical: boolean
-    # output: centroids [real matrix, where for each row we have the centroid of the cluster], label_clustering [int vector, for each cell the cluster of the doc]
     def k_means(self, sentences, n_clusters, spherical=False):
         """ corresponds to the standard k-means clustering algorithm
         @param sentences: numpy.ndarray, real matrix where each row corresponds to the embeddings of the sentence
@@ -37,10 +34,6 @@ class FaissClustering():
         return clustering.centroids, label_clustering
 
 
-    # label_centroids: (give the sentiment of each centroid)
-    # input: n_clusters [int, number of clusters], centroids [real matrix, where each row is a cluster embedding],
-    # label_clustering [int vector, for each cell the cluster of the sentence], sentiment [-1 or +1 vector, that is the sentiment of each sentence]
-    # output: [-1 or 1 vector, that is the sentiment of each centroid]
     def label_centroids(self, n_clusters, label_clustering, sentiment):
         """ Determines the sentiment of each cluster centroid based on the majority sentiment of its assigned sentences
         @param n_clusters: int, number of distinct clusters
@@ -88,12 +81,6 @@ class FaissClustering():
 
 
 
-    # get_result: (give the result sentiment for each query)
-    # input: queries [real matrix, where each row is a query embedding],
-    # centroids [real matrix, where each row is a centroid embedding],
-    # centroids_labeled [-1 or 1 vector, that is the sentiment for each centroid],
-    # top_k [int, top k cluster centroids that we consider for our final result]
-    # output: [-1 or 1 vector, where for each query we have the related label]
     def get_result(self, queries, centroids, centroids_labeled, top_k=1):
         """ computes the sentiment for each query based on the clustering
         @param queries: numpy.ndarray, Real matrix storing in each row a query embedding
