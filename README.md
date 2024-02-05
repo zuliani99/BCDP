@@ -12,12 +12,9 @@ Using this technique we can obtain expressiveness and calculation speed whilst k
 For further improvement of the model's accuracy, we propose a second approach that utilizes layer-wise embeddings of BERT for the benefit of greater expressiveness. Each layer captures the sentence's meaning at a different level of abstraction resulting in multiple embeddings that provide a richer representation of the meaning of the sentence. 
 The second approach is in turn divided into two sub-projects: in the first one, we consider each layer-embedding separately and for each of them we perform what we have described in the previous approach. As regards the second sub-project, an extra attention layer is added to incorporate all the layer-wise embeddings given by BERT (layer-aggregation). In this variation we decided to fine-tune the model by freezing the BERT layers while allowing the newer attention layer to train its weights. This procedure aids to avoid the phenomenon of Catastrophic Forgetting. Another different solution is to fine-tune the complete models with a very low learning rate (2e-5). Continuing the whole model is done to achieve a better vector representation in the output that considers all the different nuances of the different layers in order to solve our problem optimally. Once having extracted the embedding, the remaining procedure is equal to the first approach.
 
-## Packages Installation
+## Enviroment SetUp
 ```
-!pip install torch
-!pip install transformers
-!pip install datasets
-!pip install faiss-gpu
+conda create --name <env> --file requirements.txt
 ```
 
 ## Run
