@@ -4,6 +4,7 @@ import faiss
 from tqdm.auto import tqdm
 
 from utils import read_embbedings, write_csv
+from sklearn.metrics import classification_report
 
 class FaissClustering():
     def __init__(self):
@@ -175,6 +176,19 @@ class FaissClustering():
         F1 = 2*precision*recall/(precision + recall)
 
         return (precision, recall, F1)
+    
+    def report(self, model_results, ground_truth):
+        """ calculates precision, recall, F1-measure for each class and the accuracy
+        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
+        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
+            
+        @return:
+            tuple containing a dictionary with precision, recall, F1-measure for the negative class, one dictionary for the positive class and the accuracy """
+
+        results = classification_report(ground_truth, model_results)
+
+        return results['-1'], results['1'], results['accuracy']
+
 
 
 
@@ -201,14 +215,16 @@ class FaissClustering():
             for top_k in self.top_k_list:
                 if top_k < n_clusters:
                     query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k)
-                    test_accuracy = self.accuracy_result(query_result, y_test)
-                    harmonic_mean = self.F1(query_result, y_test)
-                    
-                    print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
+                    #test_accuracy = self.accuracy_result(query_result, y_test)
+                    #harmonic_mean = self.F1(query_result, y_test)
+                    evaluations = self.report(query_result, y_test)
+
+                    #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
+                    print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, evaluations[-1]))
 
                     write_csv(
                         ts_dir = timestamp,
-                        head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure'],
-                        values = [methods_name, dataset_name, test_accuracy, confidence, harmonic_mean],
+                        head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure negative', 'F1-measure positive'],
+                        values = [methods_name, dataset_name, evaluations[-1], confidence, evaluations[0], evaluations[1]],
                         categoty_type='our_approaches'
                     )
