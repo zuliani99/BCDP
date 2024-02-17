@@ -1,29 +1,27 @@
 
-from tqdm import tqdm
-from ClusteringEmbeddings import ClusteringEmbeddings
 import torch
 import os
 
-class Train_Evaluate(ClusteringEmbeddings):
-    def __init__(self, name, params):
-        ClusteringEmbeddings.__init__(self, name, params['embedding_split_perc'],
-                         params['device'], params['tokenizer'], params['model'], params['embeddings_dim'])
+from utils import init_params
+
+class Train_Evaluate(object):
+    def __init__(self, name, params, model):
   
         self.batch_size = params['batch_size']
         self.loss_fn = params['loss_fn']
         self.score_fn = params['score_fn']
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)#, weight_decay=1e-5)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
         self.patience = params['patience']
         self.epochs = params['epochs']
+        self.device = params['device']
+        self.model = model.to(self.device)
+        self.name = name
   
-
         self.best_check_filename = 'app/checkpoints'
         self.init_check_filename = 'app/checkpoints/init'
-
         
-    #def __save_init_checkpoint(self, filename):
-    #	checkpoint = { 'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), 'scheduler': self.scheduler.state_dict() }
-    #	torch.save(checkpoint, filename)
+        self.model.apply(init_params)
+
 
 
     def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
@@ -55,14 +53,13 @@ class Train_Evaluate(ClusteringEmbeddings):
         checkpoint = torch.load(filename, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
-        #self.scheduler.load_state_dict(checkpoint['scheduler'])
 
         return checkpoint['actual_patience'], checkpoint['epoch'], checkpoint['best_val_loss']
   
 
 
 
-    def evaluate(self, val_dl, epoch = 0, epochs = 0):
+    def evaluate(self, val_dl):
         """Evaluate the model's performance on a validation dataset.
 		@param val_dl: the data loader for the validation dataset
 		@param epoch: int, the current epoch number, default is 0
@@ -76,29 +73,19 @@ class Train_Evaluate(ClusteringEmbeddings):
 
         self.model.eval()
 
-        #pbar = tqdm(val_dl, total = len(val_dl), leave=False)
-
         with torch.inference_mode(): # Allow inference mode
-            for dictionary, labels in val_dl:
+            for bert_ebmbeds, labels in val_dl:
 
-                for key in list(dictionary.keys()):
-                    dictionary[key] = dictionary[key].to(self.device)
-                labels = labels.to(self.device)
+                bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
             
-                if self.name == 'LayerAggregation':
-                    outputs, _ = self.model(dictionary)
-                else: 
-                    outputs = self.model(dictionary)
+                if self.name == 'LayerAggregation': outputs, _ = self.model(bert_ebmbeds)
+                else: outputs = self.model(bert_ebmbeds)
                      
                 accuracy = self.score_fn(outputs, labels)
                 loss = self.loss_fn(outputs, labels)
 
                 val_accuracy += accuracy
                 val_loss += loss
-
-                #if epoch > 0: pbar.set_description(f'EVALUATION Epoch [{epoch} / {epochs}]')
-                #else: pbar.set_description('TESTING')
-                #pbar.set_postfix(accuracy = accuracy)
 
             val_accuracy /= len(val_dl)
             val_loss /= len(val_dl)
@@ -123,9 +110,9 @@ class Train_Evaluate(ClusteringEmbeddings):
 
 
 
-    def fit(self, ds_name, self_name, train_dl, val_dl):
+    def fit(self, model_name, train_dl, val_dl):
         
-        check_best_path = f'{self.best_check_filename}/{ds_name}_{self_name}.pth.tar'
+        check_best_path = f'{self.best_check_filename}/{model_name}_{self.name}.pth.tar'
         
         actual_epoch = 0
         best_val_loss = float('inf')
@@ -146,24 +133,17 @@ class Train_Evaluate(ClusteringEmbeddings):
 
             train_accuracy, train_loss = 0.0, 0.0
 
-            #pbar = tqdm(train_dl, total = len(train_dl), leave=False)
 
-            for dictionary, labels in train_dl:
-       
-       
-                for key in list(dictionary.keys()):
-                    dictionary[key] = dictionary[key].to(self.device)
-                labels = labels.to(self.device)
+            for bert_ebmbeds, labels in train_dl:
+
+                bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
                                 
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
                 
-                if self.name == 'LayerAggregation':
-                    outputs, _ = self.model(dictionary)
-                else: 
-                    outputs = self.model(dictionary)
+                if self.name == 'LayerAggregation': outputs, _ = self.model(bert_ebmbeds)
+                else: outputs = self.model(bert_ebmbeds)
 
-     
                 loss = self.loss_fn(outputs, labels)
                 
                 loss.backward()
@@ -174,9 +154,6 @@ class Train_Evaluate(ClusteringEmbeddings):
                 train_accuracy += accuracy
                 train_loss += loss
 
-                # Update the progress bar
-                #pbar.set_description(f'TRAIN Epoch [{epoch + 1} / {self.epochs}]')
-                #pbar.set_postfix(accuracy = accuracy, loss = loss.item())
     
 
             train_accuracy /= len(train_dl)
@@ -184,7 +161,7 @@ class Train_Evaluate(ClusteringEmbeddings):
    
 
             # Validation step
-            val_accuracy, val_loss = self.evaluate(val_dl, epoch + 1, self.epochs)
+            val_accuracy, val_loss = self.evaluate(val_dl)
 
             print('Epoch [{}], train_accuracy: {:.6f}, train_loss: {:.6f}, val_accuracy: {:.6f}, val_loss: {:.6f} \n'.format(
                 epoch + 1, train_accuracy, train_loss, val_accuracy, val_loss))
@@ -198,7 +175,6 @@ class Train_Evaluate(ClusteringEmbeddings):
                 actual_patience += 1
                 if actual_patience >= self.patience:
                     print(f'Early stopping, validation accuracy do not decreased for {self.patience} epochs')
-                    #pbar.close() # Closing the progress bar before exiting from the train loop
                     break
                                 
 

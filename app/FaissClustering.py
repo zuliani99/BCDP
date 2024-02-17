@@ -1,16 +1,15 @@
 
 import numpy as np
 import faiss
-from tqdm.auto import tqdm
-
-from utils import read_embbedings, write_csv
 from sklearn.metrics import classification_report
+import time
 
-class FaissClustering():
+from utils import write_csv
+
+class Faiss_KMEANS():
     def __init__(self):
         self.n_clusters_list = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
         self.top_k_list = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
-        self.size_split = 0.2
 
 
 
@@ -46,7 +45,7 @@ class FaissClustering():
 
         """
         centroids_sentiment = []
-        for i in tqdm(range(n_clusters)):
+        for i in range(n_clusters):
             indices = np.where(label_clustering == i)[0]
             if np.sum(sentiment[indices]) >= 0:
                 centroids_sentiment.append(1)
@@ -121,61 +120,6 @@ class FaissClustering():
 
 
 
-
-    def precision(self, model_results, ground_truth):
-        """ calculates the precision of the predictions, i. e. the accuracy of the positive predictions
-        
-        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
-        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
-
-        @return:
-            the corresponding precision as float, returns 0 if the denominator evaluates to 0
-        """
-        true_p = 0
-        false_p = 0
-        indices = np.where(model_results == 1)[0]
-        for i in indices:
-            if model_results[i] == ground_truth[i]: true_p += 1
-            else: false_p += 1
-        return true_p/(true_p + false_p) if true_p + false_p != 0 else 0
-    
-    
-    def recall(self, model_results, ground_truth):
-        """ measures the ability of the model to correctly identify all relevant instances
-
-        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
-        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
-
-        @return:
-            the corresponding recall as float, 0 if the denominator evaluates to 0
-        """
-        true_p = 0
-        false_n = 0
-        indices = np.where(model_results == 1)[0]
-        for i in indices:
-            if model_results[i] == ground_truth[i]: true_p += 1
-        
-        indices_n = np.where(model_results == 0)[0]
-        for i in indices_n:
-            if model_results[i] != ground_truth[i]: false_n += 1
-        
-        return true_p /(true_p+false_n) if true_p + false_n != 0 else 0
-
-
-
-
-    def F1(self, model_results, ground_truth):
-        """ calculates the F1-measure, i.e the harmonic mean between precision and recall, of the predictions
-        @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
-        @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
-            
-        @return:
-            precision, recall, F1 of the model """
-        precision = self.precision(model_results, ground_truth)
-        recall = self.recall(model_results, ground_truth)
-        F1 = 2*precision*recall/(precision + recall)
-
-        return (precision, recall, F1)
     
     def report(self, model_results, ground_truth):
         """ calculates precision, recall, F1-measure for each class and the accuracy
@@ -192,8 +136,7 @@ class FaissClustering():
 
 
 
-
-    def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, spherical = False):
+    def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, data, categoty_type, spherical = False):
         """ performs the clustering and the predictions of the model, evaluating its accuracy and F1-measure and the confidence of the clusters
 
         @param dataset_name: str, dataset to be used in the run
@@ -204,7 +147,8 @@ class FaissClustering():
         @return: None
         """
 
-        x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
+        #x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
+        x_train, x_test, y_train, y_test = data
 
         for n_clusters in self.n_clusters_list:
             
@@ -214,7 +158,10 @@ class FaissClustering():
 
             for top_k in self.top_k_list:
                 if top_k < n_clusters:
+                    start = time.time()
                     query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k)
+                    end = time.time()
+                    
                     #test_accuracy = self.accuracy_result(query_result, y_test)
                     #harmonic_mean = self.F1(query_result, y_test)
                     evaluations = self.report(query_result, y_test)
@@ -224,7 +171,7 @@ class FaissClustering():
 
                     write_csv(
                         ts_dir = timestamp,
-                        head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure negative', 'F1-measure positive'],
-                        values = [methods_name, dataset_name, evaluations[-1], confidence, evaluations[0], evaluations[1]],
-                        categoty_type='our_approaches'
+                        head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure negative', 'F1-measure positive', 'elapsed'],
+                        values = [methods_name, dataset_name, evaluations[-1], confidence, evaluations[0], evaluations[1], end-start],
+                        categoty_type = categoty_type
                     )

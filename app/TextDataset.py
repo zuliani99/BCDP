@@ -1,10 +1,8 @@
 
-from torch.utils.data import Dataset, Sampler, DataLoader, random_split
-import torch
+from torch.utils.data import Dataset, DataLoader, random_split
 
 from utils import collate_fn
 import numpy as np
-import os
 
 class CustomTextDataset(Dataset):
     def __init__(self, vocab, tokenizer):
@@ -40,26 +38,6 @@ class CustomTextDataset(Dataset):
         return {'input_ids': input_ids, 'attention_mask': attention_mask}, self.vocab[idx]['label']
     
     
-class UniqueShuffle(Sampler):
-    def __init__(self, dataset, ds_name, dl_type):
-        self.indices = dataset.indices #if isinstance(dataset, Subset) else list(dataset.vocab.keys())
-        self.dl_order_path = f'app/embeddings/{ds_name}/dataloaders_order/{dl_type}.npy'
-        self.shuffle_indices()
-
-    def shuffle_indices(self):
-        if not os.path.exists(self.dl_order_path):
-            print('Creating and Saving Dataloader Order')
-            self.indices = list(torch.randperm(len(self.indices)))
-            np.save(self.dl_order_path, np.array(self.indices, dtype=np.int8))
-        else:
-            print('Loading Dataloader Order') 
-            self.indices = np.load(self.dl_order_path).tolist()
-        
-    def __iter__(self):
-        return iter(self.indices)
-
-    def __len__(self):
-        return len(self.indices)
     
     
 def get_dataloaders(datasets_dict, tokenizer, batch_size):
@@ -84,19 +62,19 @@ def get_dataloaders(datasets_dict, tokenizer, batch_size):
 		datalaoders[ds_name]['train'] = DataLoader(train_data,
                                             batch_size=batch_size,
                                             collate_fn=collate_fn,
-                                            sampler=UniqueShuffle(train_data, ds_name, 'train'),
+                                            shuffle=True,
                                             pin_memory=True)
   
 		datalaoders[ds_name]['val'] = DataLoader(val_data,
                 							batch_size=batch_size,
                              				collate_fn=collate_fn,
-                                			sampler=UniqueShuffle(val_data, ds_name, 'val'),
+                                            shuffle=False,
                                  			pin_memory=True)
    
 		datalaoders[ds_name]['test'] = DataLoader(test_ds,
                                             batch_size=batch_size,
                                             collate_fn=collate_fn,
-                                            sampler=UniqueShuffle(test_ds, ds_name, 'test'),
+                                            shuffle=False,
                                             pin_memory=True)
 		
 	return datalaoders
