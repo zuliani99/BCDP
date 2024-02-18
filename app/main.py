@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+import argparse
 
 from BaseEmbedding import BaseEmbedding
 from utils import accuracy_score, create_ts_dir_res, get_datasets
@@ -15,10 +16,18 @@ import torch.nn as nn
 from transformers import DistilBertTokenizer, DistilBertModel, BertTokenizer, BertModel
 
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-m', '--model', type=str, choices=['BERT', 'DISTILBERT'], required=True, help='Pretreined BERT model from Huggingface')
+parser.add_argument('-a', '--ablations', type=bool, required=True, help='Bool ablations')
+
+args = parser.parse_args()
+
+choosen_model_embedding = args.model #'DISTILBERT'
+bool_ablations = args.ablations #False
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-choosen_model_embedding = 'DISTILBERT'
-bool_ablations = False
 
 bert_models = {
 	'BERT': {
@@ -105,14 +114,14 @@ def main():
 	print('Starting running strategies...')
  
 	methods = [
-		# our approaches -> OK
-		#main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
+		# our approaches
+		main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
 
-		# competitors # -> OK
+		# competitors
 		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
   
-		# baselines -> OK
-		#baselines 
+		# baselines
+		baselines 
 	]
  
 	run_methods(methods)

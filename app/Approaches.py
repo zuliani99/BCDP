@@ -187,8 +187,11 @@ class LayerAggregation(Approaches):
   
 	def get_LayerAggregation_Embeddigns(self, dataloader):
   
-		LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
-		LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
+		#LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
+		LA_embeds = np.empty((0, self.embeddings_dim * self.n_layers), dtype=np.float32)		
+		#LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
+		LA_labels = np.empty((0), dtype=np.int8)		
+
   
 		self.tran_evaluate.model.eval()
 
@@ -196,14 +199,16 @@ class LayerAggregation(Approaches):
 			for bert_embeds, labels in dataloader:
 
 				bert_embeds = bert_embeds.to(self.tran_evaluate.device)
-				labels = labels.to(self.tran_evaluate.device)
+				#labels = labels.to(self.tran_evaluate.device)
 			
 				_, embeds = self.tran_evaluate.model(bert_embeds)
 
-				LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
-				LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
+				#LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
+				LA_embeds = np.vstack((LA_embeds, embeds.detach().cpu().numpy()))
+				#LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
+				LA_labels = np.append(LA_labels, labels.numpy().flatten())
 
-		return LA_embeds.cpu().numpy(force=True), LA_labels.cpu().numpy(force=True)
+		return LA_embeds, LA_labels
 
 
 					 
@@ -231,8 +236,8 @@ class LayerAggregation(Approaches):
 			x_test, y_test = self.get_LayerAggregation_Embeddigns(test_dl)
 			print(' DONE\n')
    
-			x_train = np.vstack((x_train, x_val)).astype(np.float32)
-			y_train = np.append(y_train, y_val).astype(np.float32)
+			x_train = np.vstack((x_train, x_val))#.astype(np.float32)
+			y_train = np.append(y_train, y_val)#.astype(np.int8)
    
 			y_train[y_train == 0] = -1
 			y_test[y_test == 0] = -1

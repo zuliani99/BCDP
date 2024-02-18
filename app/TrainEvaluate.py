@@ -25,16 +25,16 @@ class Train_Evaluate(object):
         
     def __save_init_checkpoint(self):
         if not os.path.exists(f'{self.check_filename}/init_{self.name}.pth.tar'):
-            print(f' => Saving initial checkpoint for {self.name}')
+            print(f' => Saving initial {self.name} checkpoint')
             checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict()}
             torch.save(checkpoint, f'{self.check_filename}/init_{self.name}.pth.tar')
             print(' DONE\n')
         else:
-            print(' => Initial checkpoint already present')
+            print(f' => Initial {self.name} checkpoint already present')
 
     
     def load_initial_checkpoint(self):
-        print(' => Loading initial checkpoint')
+        print(f' => Loading initial {self.name} checkpoint')
         checkpoint = torch.load(f'{self.check_filename}/init_{self.name}.pth.tar', map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
@@ -51,10 +51,11 @@ class Train_Evaluate(object):
 
 		@Return: None
 		"""
-
+        print(f' => Saving best {self.name} checkpoint')
         checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(),
                       'actual_patience': actual_patience, 'epoch': epoch, 'best_val_loss': best_val_loss}
         torch.save(checkpoint, filename)
+        print(' DONE\n')
 
 
 
@@ -67,10 +68,12 @@ class Train_Evaluate(object):
 
 		"""
 
+        print(f' => Loading {self.name} best checkpoint')
         checkpoint = torch.load(filename, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
-
+        print(' DONE\n')
+        
         return checkpoint['actual_patience'], checkpoint['epoch'], checkpoint['best_val_loss']
   
 
@@ -136,7 +139,7 @@ class Train_Evaluate(object):
         actual_patience = 0
 
         if os.path.exists(check_best_path):
-            print(' => Loading best checkpoint')
+            print(f' => Loading best checkpoint')
             actual_patience, actual_epoch, best_val_loss = self.__load_best_checkpoint(check_best_path)
             print(' DONE\n')
         
