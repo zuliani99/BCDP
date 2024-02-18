@@ -16,12 +16,29 @@ class Train_Evaluate(object):
         self.model = model.to(self.device)
         self.name = name
   
-        self.best_check_filename = 'app/checkpoints'
+        self.check_filename = 'app/checkpoints'
         
         self.model.apply(init_params)
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
         
+        self.__save_init_checkpoint()
+        
+    def __save_init_checkpoint(self):
+        if not os.path.exists(f'{self.check_filename}/init_{self.name}.pth.tar'):
+            print(f' => Saving initial checkpoint for {self.name}')
+            checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict()}
+            torch.save(checkpoint, f'{self.check_filename}/init_{self.name}.pth.tar')
+            print(' DONE\n')
+        else:
+            print(' => Initial checkpoint already present')
 
+    
+    def load_initial_checkpoint(self):
+        print(' => Loading initial checkpoint')
+        checkpoint = torch.load(f'{self.check_filename}/init_{self.name}.pth.tar', map_location=self.device)
+        self.model.load_state_dict(checkpoint['state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer'])
+        print(' DONE\n')
 
 
     def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
@@ -41,8 +58,8 @@ class Train_Evaluate(object):
 
 
 
-    def __load_checkpoint(self, filename):
-        """ Load a model checkpoint from a specified file 
+    def __load_best_checkpoint(self, filename):
+        """ Load the best model checkpoint from a specified file 
 
 		@param filename: str, the filename from which to load the model checkpoint
 
@@ -112,7 +129,7 @@ class Train_Evaluate(object):
 
     def fit(self, dataset_name, train_dl, val_dl):
         
-        check_best_path = f'{self.best_check_filename}/{dataset_name}_{self.name}.pth.tar'
+        check_best_path = f'{self.check_filename}/{dataset_name}_{self.name}.pth.tar'
         
         actual_epoch = 0
         best_val_loss = float('inf')
@@ -120,7 +137,7 @@ class Train_Evaluate(object):
 
         if os.path.exists(check_best_path):
             print(' => Loading best checkpoint')
-            actual_patience, actual_epoch, best_val_loss = self.__load_checkpoint(check_best_path)
+            actual_patience, actual_epoch, best_val_loss = self.__load_best_checkpoint(check_best_path)
             print(' DONE\n')
         
         
@@ -181,7 +198,7 @@ class Train_Evaluate(object):
                     break
                                 
 
-        self.__load_checkpoint(check_best_path)
+        self.__load_best_checkpoint(check_best_path)
 
         print('Finished Training\n')
   

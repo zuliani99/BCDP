@@ -212,6 +212,8 @@ class LayerAggregation(Approaches):
 		print(f'---------------------------------- START {self.__class__.__name__} ----------------------------------')	
   
 		for ds_name in self.datasets_name:
+      
+			self.tran_evaluate.load_initial_checkpoint()
 
 			x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, self.choosen_model_embedding, bool_validation=True)
       

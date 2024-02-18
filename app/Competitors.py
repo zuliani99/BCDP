@@ -37,6 +37,8 @@ class BertLinears(Train_Evaluate):
 	 
 			print(f'--------------- {ds_name} ---------------')
    
+			self.load_initial_checkpoint()
+   
 			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
    
 			self.fit(ds_name, train_dl, val_dl)
@@ -139,6 +141,8 @@ class BertLSTMGRU(Train_Evaluate):
 		for ds_name in self.datasets_name:
 	 
 			print(f'--------------- {ds_name} ---------------')
+   
+			self.load_initial_checkpoint()
 			
 			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
 
