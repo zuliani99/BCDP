@@ -47,9 +47,10 @@ class Faiss_KMEANS():
         centroids_sentiment = []
         for i in range(n_clusters):
             indices = np.where(label_clustering == i)[0]
-            if np.sum(sentiment[indices]) >= 0: centroids_sentiment.append(1)
-            else: centroids_sentiment.append(-1)
-            
+            if np.sum(sentiment[indices]) >= 0:
+                centroids_sentiment.append(1)
+            else:
+                centroids_sentiment.append(-1)
         return np.array(centroids_sentiment)
 
 
@@ -113,39 +114,43 @@ class Faiss_KMEANS():
         result_list = 0
         for i in range(ground_truth.shape[0]):
             if model_results[i] == ground_truth[i]: result_list += 1
-        return result_list/ground_truth.shape[0]
+        return result_list / ground_truth.shape[0]
 
 
 
     
-    def report(self, model_results, ground_truth):
+    def report(self, y_true, y_pred):
         """ calculates precision, recall, F1-measure for each class and the accuracy
         @param model_results: Integer vector, contains only the values -1 and 1, predicted sentiment for all sentences
         @param ground_truth: Integer vector, contains only the values -1 and 1, actual sentiment for all sentences
             
         @return:
             tuple containing a dictionary with precision, recall, F1-measure for the negative class, one dictionary for the positive class and the accuracy """
+        
+        print(y_pred.dtype, y_true.dtype)
+        print(np.unique(y_pred), np.unique(y_true))
+        print(y_pred, y_true)
+        
+        results = classification_report(y_true, y_pred, output_dict=True, zero_division=0)#, labels=['negative', 'positive'])
+        return results['accuracy'], results['-1']['f1-score'], results['1']['f1-score']
 
-        results = classification_report(ground_truth, model_results)
-
-        return results['-1'], results['1'], results['accuracy']
 
 
-
-
-    def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, data, categoty_type, spherical = False):
+    def run_faiss_kmeans(self, dataset_name, methods_name, timestamp, categoty_type, data, spherical = False):
         """ performs the clustering and the predictions of the model, evaluating its accuracy and F1-measure and the confidence of the clusters
 
         @param dataset_name: str, dataset to be used in the run
         @param methods_name: str, method to be used in the run
         @param timestamp: str, timestamp to identify and store the run
-        @param spherical: boolean, determines whether spherical k-means is performed or not, default is False
+        @param spherical: boolean, determines whether spherical k-means is performed or not, default is True
 
         @return: None
         """
 
         x_train, x_test, y_train, y_test = data
-
+        
+        print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
+                
         for n_clusters in self.n_clusters_list:
             
             centroids, label_clustering = self.k_means(x_train, n_clusters, spherical)
@@ -155,16 +160,16 @@ class Faiss_KMEANS():
             for top_k in self.top_k_list:
                 if top_k < n_clusters:
                     start = time.time()
-                    query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k)
+                    query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k).astype(np.int8)
                     end = time.time()
-                    
-                    evaluations = self.report(query_result, y_test)
+                                        
+                    accuracy, neg_f1, pos_f1 = self.report(y_test, query_result)
 
-                    print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, evaluations[-1]))
+                    print('Result -> \t (n. clusters = {0} and k = {1}): \t {2}'.format(n_clusters, top_k, accuracy))
 
                     write_csv(
                         ts_dir = timestamp,
-                        head = ['method', 'dataset', 'test_accuracy', 'confidence', 'F1-measure negative', 'F1-measure positive', 'elapsed'],
-                        values = [methods_name, dataset_name, evaluations[-1], confidence, evaluations[0], evaluations[1], end-start],
+                        head = ['method', 'dataset', 'n_clusters', 'top_k', 'test_accuracy', 'confidence', 'negative_f1', 'positive_f1', 'elapsed'],
+                        values = [methods_name, dataset_name, n_clusters, top_k, accuracy, confidence, neg_f1, pos_f1, end-start],
                         categoty_type = categoty_type
                     )

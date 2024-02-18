@@ -34,8 +34,8 @@ class Approaches(object):
 			pca = PCA(n_components=2)
 			tsne = TSNE()
 	
-			ablations_dict['pca'] = {'x_train': pca.fit_transform(x_train), 'x_test': pca.fit_transform(x_train)}
-			ablations_dict['tsne'] = {'x_train': tsne.fit_transform(x_train), 'x_test': tsne.fit_transform(x_train)}
+			ablations_dict['pca'] = {'x_train': pca.fit_transform(x_train), 'x_test': pca.fit_transform(x_test)}
+			ablations_dict['tsne'] = {'x_train': tsne.fit_transform(x_train), 'x_test': tsne.fit_transform(x_test)}
 				
 			for ab_name, x_reduced in ablations_dict.items():
        
@@ -71,7 +71,7 @@ class Approaches(object):
 				method_name,
 				self.timestamp,
     			'our_approaches',
-				(x_train, x_test, y_train, y_test)
+				data
 			)
 
 			print('------------------------------------------\n')
@@ -94,9 +94,11 @@ class MainApproch(Approaches):
 			x_train, x_test, y_train, y_test = read_embbedings(ds_name, self.choosen_model_embedding)
 			# [#sentence, #layers, 768] -> [#sentence, 768] 
 
-			x_train = np.squeeze(x_train[:,-1,:])
-			x_test = np.squeeze(x_test[:,-1,:])
-   
+			x_train = np.squeeze(np.copy(x_train[:,-1,:]))
+			x_test = np.squeeze(np.copy(x_test[:,-1,:]))
+      
+			print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
+      
 			self.run_clustering(ds_name, self.__class__.__name__, (x_train, x_test, y_train, y_test))
 			
 
@@ -131,14 +133,11 @@ class LayerWise(Approaches):
 			else:
 				# [#sentence, #layers, 768] -> [#sentence, #layers x 768] 
 				
-				# getting the CLS token concatenations from the (last 6) layers 
-				#x_train = x_train[:,6:,:]
+				# reshape the embeddings
 				x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
-    
-				#x_test = x_test[:,6:,:]
 				x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
 
-			self.run_clustering(ds_name, self.__class__.__name__, (x_train, x_test, y_train, y_test))
+			self.run_clustering(ds_name, self.name, (x_train, x_test, y_train, y_test))
 
 		
 		print(f'\n---------------------------------- END {self.name} ----------------------------------\n\n')
@@ -148,27 +147,27 @@ class LayerWise(Approaches):
 
 
 class SelfAttentionLayer(nn.Module):
-	def __init__(self, input_size, output_size, attention_heads):
+	def __init__(self, input_size, n_layers, output_size, attention_heads):
 		super(SelfAttentionLayer, self).__init__()
 
-		self.multihead_att = nn.MultiheadAttention(input_size, attention_heads, need_weights = False)
+		self.multihead_att = nn.MultiheadAttention(input_size, attention_heads)
+		self.new_input_size = input_size * n_layers
 
 		# Linear transformation for the output of attention heads
 		self.classifier = nn.Sequential(
 			nn.Dropout(p=0.5),
-			nn.Linear(input_size, input_size // 2),
+			nn.Linear(self.new_input_size, self.new_input_size // 2),
    			nn.ReLU(inplace=True),
 			nn.Dropout(p=0.5),
-			nn.Linear(input_size // 2, input_size // 4),
+			nn.Linear(self.new_input_size // 2, self.new_input_size // 4),
    			nn.ReLU(inplace=True),
 			nn.Dropout(p=0.5),
-			nn.Linear(input_size // 4, output_size)
+			nn.Linear(self.new_input_size // 4, output_size)
 		)
   
 	def forward(self, x):
-		print(x.shape)
-		# Linear transformations for Query, Key, and Value
-		attn_output = torch.flatten(self.multihead_att(x, x, x))
+		mhsa = self.multihead_att(x, x, x, need_weights = False)[0]
+		attn_output = torch.reshape(mhsa, (mhsa.shape[0], mhsa.shape[1] * mhsa.shape[2]))
 		outputs = self.classifier(attn_output)
 		return outputs, attn_output
 
@@ -177,33 +176,34 @@ class SelfAttentionLayer(nn.Module):
 
 class LayerAggregation(Approaches):
 	
-	def __init__(self, params, common_parmas, embeddings_dim, bool_ablations):
+	def __init__(self, params, common_parmas, n_layers, embeddings_dim, bool_ablations):
 		
 		super().__init__(common_parmas['timestamp'], common_parmas['choosen_model_embedding'], embeddings_dim = embeddings_dim, bool_ablations = bool_ablations)
 		self.datasets_name = common_parmas['datasets_name']
+		self.n_layers = n_layers
   
-		self.tran_evaluate = Train_Evaluate(self.__class__.__name__, params, SelfAttentionLayer(self.embeddings_dim, output_size=2, attention_heads=8))
+		self.tran_evaluate = Train_Evaluate(self.__class__.__name__, params, SelfAttentionLayer(self.embeddings_dim, n_layers, output_size=2, attention_heads=8))
   
   
 	def get_LayerAggregation_Embeddigns(self, dataloader):
   
-		LA_embeds = torch.empty((0, self.embeddings_dim), dtype=torch.float32, device=self.device)		
-		LA_labels = torch.empty((0), device=self.device)		
+		LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
+		LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
   
 		self.tran_evaluate.model.eval()
 
 		with torch.inference_mode(): # Allow inference mode
 			for bert_embeds, labels in dataloader:
 
-				bert_embeds = bert_embeds.to(self.device)
-				labels = labels.to(self.device)
+				bert_embeds = bert_embeds.to(self.tran_evaluate.device)
+				labels = labels.to(self.tran_evaluate.device)
 			
 				_, embeds = self.tran_evaluate.model(bert_embeds)
 
 				LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
-				LA_labels = torch.cat((LA_embeds, labels))
+				LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
 
-		return LA_embeds.cpu().numpy(), LA_labels.cpu().numpy()
+		return LA_embeds.cpu().numpy(force=True), LA_labels.cpu().numpy(force=True)
 
 
 					 
@@ -214,27 +214,30 @@ class LayerAggregation(Approaches):
 		for ds_name in self.datasets_name:
 
 			x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, self.choosen_model_embedding, bool_validation=True)
-   			
-			# concatenation of all the CLS tokens
-			#x_train = torch.reshape(x_train, (x_train.shape[0], x_train.shape[1] * x_train.shape[2]))
-			#x_test = torch.reshape(x_test, (x_test.shape[0], x_test.shape[1] * x_test.shape[2]))
       
 			# create tensor dataloaders
-			train_dl, val_dl, test_dl = get_text_dataloaders(x_train, y_train, x_val, y_val, x_test, y_test)
+			train_dl, val_dl, test_dl = get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, self.tran_evaluate.batch_size)
 
 			self.tran_evaluate.fit(ds_name, train_dl, val_dl)
    
 			# we can for eaxample save these metrics to compare with the additional embedding
 			_, _ = self.tran_evaluate.test(test_dl)
    
+			print(' => Obtaining the Layer Aggregation embeddings:')
 			x_train, y_train = self.get_LayerAggregation_Embeddigns(train_dl)
-			x_val, y_val = self.get_LayerAggregation_Embeddigns(train_dl)
-			x_test, y_test = self.get_LayerAggregation_Embeddigns(train_dl)
+			x_val, y_val = self.get_LayerAggregation_Embeddigns(val_dl)
+			x_test, y_test = self.get_LayerAggregation_Embeddigns(test_dl)
+			print(' DONE\n')
    
 			x_train = np.vstack((x_train, x_val))
 			y_train = np.append(y_train, y_val)
    
-			self.run_clustering(ds_name, self.__class__.__name__, (x_train, x_test, y_train, y_test))
+			y_train[y_train == 0] = -1
+			y_test[y_test == 0] = -1
+      
+			torch.cuda.empty_cache()
+   
+			self.run_clustering(ds_name, self.__class__.__name__, (x_train, x_test, y_train.astype(np.int8), y_test.astype(np.int8)))
    
 		print(f'\n---------------------------------- END {self.__class__.__name__} ----------------------------------\n\n')
 

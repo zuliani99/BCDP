@@ -79,31 +79,39 @@ def read_embbedings(dataset_name, choosen_model_embedding, bool_validation = Fal
 	
 	if not bool_validation:
 		x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], axis=0, dtype=np.float32)
-		x_test = np.load(f'{path}/test_embeddings.npy')
+		x_test = np.load(f'{path}/test_embeddings.npy').astype(np.float32)
 			
-		y_train = np.concatenate([np.load(f'{path}/labels/train_labels.npy'), np.load(f'{path}/labels/val_labels.npy')], axis=0)
-		y_test = np.load(f'{path}/labels/test_labels.npy')
+		y_train = np.concatenate([np.load(f'{path}/labels/train_labels.npy'), np.load(f'{path}/labels/val_labels.npy')], axis=0, dtype=np.int8)
+		y_test = np.load(f'{path}/labels/test_labels.npy').astype(np.int8)
+  
+		print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
   
 		return x_train, x_test, y_train, y_test
 
 	else:
-		x_train = torch.from_numpy(np.load(f'{path}/train_embeddings.npy'))
-		x_val = torch.from_numpy(np.load(f'{path}/val_embeddings.npy'))
-		x_test = torch.from_numpy(np.load(f'{path}/test_embeddings.npy'))
-			
-		y_train = torch.from_numpy(np.load(f'{path}/labels/train_labels.npy'))
-		y_val = torch.from_numpy(np.load(f'{path}/labels/val_labels.npy'))
-		y_test = torch.from_numpy(np.load(f'{path}/labels/test_labels.npy'))
+		x_train = torch.tensor(np.load(f'{path}/train_embeddings.npy'), dtype=torch.float32)
+		x_val = torch.tensor(np.load(f'{path}/val_embeddings.npy'), dtype=torch.float32)
+		x_test = torch.tensor(np.load(f'{path}/test_embeddings.npy'), dtype=torch.float32)
+    
+		y_train = np.load(f'{path}/labels/train_labels.npy')
+		y_val = np.load(f'{path}/labels/val_labels.npy')
+		y_test = np.load(f'{path}/labels/test_labels.npy')
   
-		return x_train, x_val, x_test, y_train, y_val, y_test
+		y_train[y_train == -1] = 0
+		y_val[y_val == -1] = 0
+		y_test[y_test == -1] = 0
+  
+		print(np.unique(y_train), np.unique(y_val), np.unique(y_test))
+  
+		return x_train, x_val, x_test, torch.tensor(y_train, dtype=torch.long), torch.tensor(y_val, dtype=torch.long), torch.tensor(y_test, dtype=torch.long)
 
 
 
 
-def get_text_dataloaders(x_train, y_train, x_val, y_val, x_test, y_test):
-	train_dl = DataLoader(TensorDataset(x_train, y_train))
-	val_dl = DataLoader(TensorDataset(x_val, y_val))
-	test_dl = DataLoader(TensorDataset(x_test, y_test))
+def get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_size):
+	train_dl = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
+	val_dl = DataLoader(TensorDataset(x_val, y_val), batch_size=batch_size, shuffle=False)
+	test_dl = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=False)
 	return train_dl, val_dl, test_dl
 
 
@@ -121,9 +129,9 @@ def get_competitors_embeddings_dls(ds_name, choosen_model_embedding):
 	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, choosen_model_embedding, bool_validation=True)
 
 	# we use embedding approach of the main strategy
-	x_train = torch.squeeze(x_train[:,-1,:])
-	x_val = torch.squeeze(x_val[:,-1,:])
-	x_test = torch.squeeze(x_test[:,-1,:])
+	x_train = torch.squeeze(torch.clone(x_train[:,-1,:]))
+	x_val = torch.squeeze(torch.clone(x_val[:,-1,:]))
+	x_test = torch.squeeze(torch.clone(x_test[:,-1,:]))
    
-	return get_text_dataloaders(x_train, y_train, x_val, y_val, x_test, y_test)
+	return get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test)
  

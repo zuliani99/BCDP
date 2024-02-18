@@ -40,7 +40,7 @@ class CustomTextDataset(Dataset):
     
     
     
-def get_dataloaders(datasets_dict, tokenizer, batch_size):
+def get_dsname_dataloaders(datasets_dict, tokenizer, batch_size):
 	
 	datalaoders = {}
 	

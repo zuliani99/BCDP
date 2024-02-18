@@ -4,7 +4,7 @@ from datetime import datetime
 
 from BaseEmbedding import BaseEmbedding
 from utils import accuracy_score, create_ts_dir_res, get_datasets
-from TextDataset import get_dataloaders
+from TextDataset import get_dsname_dataloaders
 
 from Approaches import MainApproch, LayerWise, LayerAggregation
 from Competitors import BertLinears, BertLSTMGRU
@@ -48,25 +48,25 @@ def run_methods(methods):
 def main():
     	
 	batch_size = 128
-	epochs = 5
-	patience = 2
+	epochs = 100
+	patience = 10
 
 	tokenizer = bert_models[choosen_model_embedding]['tokenizer']
 	model = bert_models[choosen_model_embedding]['model']
 	model_hidden_size = model.config.hidden_size
  
 	print('=> Getting data')
-	dataloaders = get_dataloaders(get_datasets(), tokenizer, batch_size)
-	datasets_name = list(dataloaders.keys())
+	ds_name_dataloaders = get_dsname_dataloaders(get_datasets(), tokenizer, batch_size)
+	datasets_name = list(ds_name_dataloaders.keys())
 	print(' DONE\n')
  
 	timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	create_ts_dir_res(timestamp)
  
-	print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
-	be = BaseEmbedding(model, device, dataloaders, bert_models[choosen_model_embedding]['n_layers'])
-	be.save_base_embeddings(choosen_model_embedding)
-	print(' DONE\n')
+	#print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
+	#be = BaseEmbedding(model, device, ds_name_dataloaders, bert_models[choosen_model_embedding]['n_layers'])
+	#be.save_base_embeddings(choosen_model_embedding)
+	#print(' DONE\n')
  
 	training_params = {
 		'device': device,
@@ -88,7 +88,7 @@ def main():
 	main_approach = MainApproch(common_parmas, bool_ablations)
 	layer_wise_all = LayerWise(common_parmas, bert_models[choosen_model_embedding]['n_layers'] * 768, bool_ablations)
 	layer_wise_mean = LayerWise(common_parmas, 768, bool_ablations)
-	layer_aggregation = LayerAggregation(training_params, common_parmas, bert_models[choosen_model_embedding]['n_layers'] * 768, bool_ablations)
+	layer_aggregation = LayerAggregation(training_params, common_parmas, bert_models[choosen_model_embedding]['n_layers'], 768, bool_ablations)
  
 	
 	# competitors
@@ -106,7 +106,8 @@ def main():
  
 	methods = [
 		# our approaches
-		main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
+		main_approach, layer_wise_all, layer_wise_mean, 
+		#layer_aggregation,
 
 		# competitors
 		#bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
@@ -115,7 +116,7 @@ def main():
 		#baselines
 	]
  
-	#run_methods(methods)
+	run_methods(methods)
 
 if __name__ == "__main__":
 	print(f'Running Application on {device}\n')

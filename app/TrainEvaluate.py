@@ -119,14 +119,13 @@ class Train_Evaluate(object):
         actual_patience = 0
 
         if os.path.exists(check_best_path):
+            print(' => Loading best checkpoint')
             actual_patience, actual_epoch, best_val_loss = self.__load_checkpoint(check_best_path)
+            print(' DONE\n')
         
-        #if not os.path.exists(f'{self.init_check_filename}_{self_name}.pth.tar'):
-        #	self.__save_init_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
-
         
         if actual_epoch + 1 == self.epochs:
-            print('Finished Training\n')
+            print('Already Finished Training\n')
             return 
   
         for epoch in range(actual_epoch, self.epochs):  # loop over the dataset multiple times	
@@ -137,15 +136,14 @@ class Train_Evaluate(object):
 
 
             for bert_ebmbeds, labels in train_dl:
-
                 bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
-                                
+                                                
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
                 
                 if self.name == 'LayerAggregation': outputs, _ = self.model(bert_ebmbeds)
                 else: outputs = self.model(bert_ebmbeds)
-
+                
                 loss = self.loss_fn(outputs, labels)
                 
                 loss.backward()
