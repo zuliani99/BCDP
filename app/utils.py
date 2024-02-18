@@ -8,6 +8,7 @@ import torch.nn as nn
 from datasets import load_dataset
 from torch.utils.data import TensorDataset, DataLoader
 
+import numpy as np
 
 import csv
 import os
@@ -72,28 +73,30 @@ def init_params(m):
 
 
 
-def read_embbedings_pt(dataset_name, choosen_model_embedding, bool_numpy = False, bool_validation = False):
+def read_embbedings(dataset_name, choosen_model_embedding, bool_validation = False):
 
 	path = f'app/embeddings/{choosen_model_embedding}/{dataset_name}'
-	if not bool_validation:
-		x_train = torch.cat((torch.load(f'{path}/train_embeddings.pt'), torch.load(f'{path}/val_embeddings.pt')), dim=0, dtype=torch.float32)
-		x_test = torch.load(f'{path}/test_embeddings.pt')
-			
-		y_train = torch.cat((torch.load(f'{path}/labels/train_labels.pt'), torch.load(f'{path}/labels/val_labels.pt')), dim=0)
-		y_test = torch.load(f'{path}/labels/test_labels.pt')
 	
-		if not bool_numpy: return x_train, x_test, y_train, y_test
-		else: return x_train.numpy(), x_test.numpy(), y_train.numpy(), y_test.numpy()
-	else:
-		x_train = torch.load(f'{path}/train_embeddings.pt')
-		x_val = torch.load(f'{path}/val_embeddings.pt')
-		x_test = torch.load(f'{path}/test_embeddings.pt')
+	if not bool_validation:
+		x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], axis=0, dtype=np.float32)
+		x_test = np.load(f'{path}/test_embeddings.npy')
 			
-		y_train = torch.load(f'{path}/labels/train_labels.pt')
-		y_val = torch.load(f'{path}/labels/val_labels.pt')
-		y_test = torch.load(f'{path}/labels/test_labels.pt')
-		
+		y_train = np.concatenate([np.load(f'{path}/labels/train_labels.npy'), np.load(f'{path}/labels/val_labels.npy')], axis=0)
+		y_test = np.load(f'{path}/labels/test_labels.npy')
+  
+		return x_train, x_test, y_train, y_test
+
+	else:
+		x_train = torch.from_numpy(np.load(f'{path}/train_embeddings.npy'))
+		x_val = torch.from_numpy(np.load(f'{path}/val_embeddings.npy'))
+		x_test = torch.from_numpy(np.load(f'{path}/test_embeddings.npy'))
+			
+		y_train = torch.from_numpy(np.load(f'{path}/labels/train_labels.npy'))
+		y_val = torch.from_numpy(np.load(f'{path}/labels/val_labels.npy'))
+		y_test = torch.from_numpy(np.load(f'{path}/labels/test_labels.npy'))
+  
 		return x_train, x_val, x_test, y_train, y_val, y_test
+
 
 
 
@@ -115,12 +118,12 @@ def accuracy_result(model_results, ground_truth):
 
 
 def get_competitors_embeddings_dls(ds_name, choosen_model_embedding):
-	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings_pt(ds_name, choosen_model_embedding, bool_validation=True)
+	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, choosen_model_embedding, bool_validation=True)
+
+	# we use embedding approach of the main strategy
+	x_train = torch.squeeze(x_train[:,-1,:])
+	x_val = torch.squeeze(x_val[:,-1,:])
+	x_test = torch.squeeze(x_test[:,-1,:])
    
-	x_train = x_train[-1][:, 0, :]
-	x_val = x_val[-1][:, 0, :]
-	x_test = x_test[-1][:, 0, :]
-   
-	#train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name)
 	return get_text_dataloaders(x_train, y_train, x_val, y_val, x_test, y_test)
  

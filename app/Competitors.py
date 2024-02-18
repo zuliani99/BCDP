@@ -15,10 +15,7 @@ class BertLinearLayer(nn.Module):
 		self.out = nn.Linear(pt_hidden_size, n_classes)
   
 	def forward(self, x):
-
-		output = x[-1][:,0,:]
-		output = self.drop(output)
-		return self.out(output)
+		return self.out(self.drop(x))
 
 
 
@@ -56,6 +53,8 @@ class BertLinears(Train_Evaluate):
 				categoty_type = 'competitors'
 			)
    
+			print('------------------------------------------\n')
+   
 		print(f'\n---------------------------------- END {self.__class__.__name__ } ----------------------------------\n\n')
    
    
@@ -65,14 +64,10 @@ class BertLinears(Train_Evaluate):
 
 
 class BertLSTMGRUModel(nn.Module):
-	def __init__(self, hidden_size, num_classes, bidirectional, lstm_gru, n_layers = 1):
+	def __init__(self, hidden_size, num_classes, bidirectional, lstm_gru):
 		super(BertLSTMGRUModel, self).__init__()
 		
 		self.hidden_size = hidden_size
-		
-		# menaning???????????????????
-		self.n_layers = n_layers
-
 		self.bidirectional = bidirectional
 		self.lstm_gru = lstm_gru
 		self.dropout = nn.Dropout(0.5)
@@ -83,16 +78,14 @@ class BertLSTMGRUModel(nn.Module):
  
 	
 	def forward(self, x):
-		batch_size = x[0].size(0)
+		batch_size = x.shape[0]
 		hidden = self.init_hidden(batch_size)
-        
-		embedded = x[-1][:,0,:]
 
-		output, _ = self.lstm_gru(embedded, hidden)
+		output, _ = self.lstm_gru(x, hidden)
 
 		if self.bidirectional:
-			out_fwd = output[:,-1,:(self.hidden_size)]
-			out_bwd = output[:,0,(self.hidden_size):]
+			out_fwd = output[:, -1, :(self.hidden_size)]
+			out_bwd = output[:, 0, (self.hidden_size):]
 			output = torch.cat((out_fwd, out_bwd), 1)
 			output = self.dropout(output)
 			output = self.fc1(output)
@@ -102,23 +95,23 @@ class BertLSTMGRUModel(nn.Module):
 			output = self.fc1(output[:,-1,:])
 
 		output = self.sigmoid(output)
-		return output#, hidden
+		return output
         
         
 	def init_hidden(self, batch_size):
 		weight = next(self.parameters()).data
-		if self.lstm_gru.__class__.__name__ == 'LSTM':
-			hidden = (weight.new(2*self.n_layers, batch_size, self.hidden_size).zero_(),
-						weight.new(2*self.n_layers, batch_size, self.hidden_size).zero_())
+		if self.bidirectional:
+			hidden = (weight.new(1, batch_size, self.hidden_size).zero_(),
+						weight.new(1, batch_size, self.hidden_size).zero_())
 		else:
-			hidden = weight.new(2*self.n_layers, batch_size, self.hidden_size).zero_()
+			hidden = weight.new(1, batch_size, self.hidden_size).zero_()
 		return hidden
 
 
 class BertLSTMGRU(Train_Evaluate):
 	def __init__(self, params, common_parmas, pt_hidden_size, lstm_gru, bidirectional=False):
-     
-		super().__init__(self.custom_name, params, BertLSTMGRUModel(
+          
+		super().__init__('Bert_bi{lstm_gru}' if bidirectional is True else 'Bert_{lstm_gru}', params, BertLSTMGRUModel(
       						pt_hidden_size, num_classes=2, bidirectional=bidirectional,
                             lstm_gru = 
                             	nn.GRU(
@@ -131,10 +124,10 @@ class BertLSTMGRU(Train_Evaluate):
 								)  
                         	)
                    		)
-		
+  
+		self.custom_name = 'Bert_bi{lstm_gru}' if bidirectional is True else 'Bert_{lstm_gru}'
 		self.datasets_name = common_parmas['datasets_name']
 		self.timestamp = common_parmas['timestamp']
-		self.custom_name = 'Bert_bi{lstm_gru}' if bidirectional is True else 'Bert_{lstm_gru}'
 		self.choosen_model_embedding = common_parmas['choosen_model_embedding']
 	
 
@@ -162,6 +155,9 @@ class BertLSTMGRU(Train_Evaluate):
 				values = [self.__class__.__name__, ds_name, test_accuracy, test_loss, end-start],
 				categoty_type = 'competitors'
 			)
+
+			print('------------------------------------------\n')
+
    
 		print(f'\n---------------------------------- END {self.custom_name} ----------------------------------\n\n')
    

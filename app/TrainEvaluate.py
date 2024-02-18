@@ -10,7 +10,6 @@ class Train_Evaluate(object):
         self.batch_size = params['batch_size']
         self.loss_fn = params['loss_fn']
         self.score_fn = params['score_fn']
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
         self.patience = params['patience']
         self.epochs = params['epochs']
         self.device = params['device']
@@ -18,9 +17,10 @@ class Train_Evaluate(object):
         self.name = name
   
         self.best_check_filename = 'app/checkpoints'
-        self.init_check_filename = 'app/checkpoints/init'
         
         self.model.apply(init_params)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
+        
 
 
 
@@ -35,7 +35,7 @@ class Train_Evaluate(object):
 		@Return: None
 		"""
 
-        checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(), #'scheduler': self.scheduler.state_dict(),
+        checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(),
                       'actual_patience': actual_patience, 'epoch': epoch, 'best_val_loss': best_val_loss}
         torch.save(checkpoint, filename)
 
@@ -125,7 +125,9 @@ class Train_Evaluate(object):
         #	self.__save_init_checkpoint(f'{self.init_check_filename}_{self_name}.pth.tar')
 
         
-        if actual_epoch + 1 == self.epochs: return 
+        if actual_epoch + 1 == self.epochs:
+            print('Finished Training\n')
+            return 
   
         for epoch in range(actual_epoch, self.epochs):  # loop over the dataset multiple times	
       

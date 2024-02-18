@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 
-from utils import read_embbedings_pt, write_csv, accuracy_result
+from utils import read_embbedings, write_csv, accuracy_result
 
 
 class Baselines(object):
@@ -93,10 +93,10 @@ class Baselines(object):
             
             print(f'--------------- {ds_name} ---------------')
                 
-            x_train, x_test, self.y_train, self.y_test = read_embbedings_pt(ds_name, self.choosen_model_embedding, bool_numpy = True)
+            x_train, x_test, self.y_train, self.y_test = read_embbedings(ds_name, self.choosen_model_embedding)
                 
-            self.x_train = x_train[-1][:, 0, :]
-            self.x_test = x_test[-1][:, 0, :]
+            self.x_train = np.squeeze(x_train[:,-1,:])
+            self.x_test = np.squeeze(x_test[:,-1,:])
                 
             self.run_baselines(ds_name)
                 

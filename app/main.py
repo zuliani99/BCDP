@@ -34,6 +34,17 @@ bert_models = {
 }
 
 
+def run_methods(methods):
+ 
+	for method in methods: method.run()
+ 
+	if bool_ablations:
+		# run ablations
+		for ablation in methods[:4]:
+			ablation.bool_ablations = True
+			ablation.run()
+  
+ 
 def main():
     	
 	batch_size = 128
@@ -41,10 +52,10 @@ def main():
 	patience = 2
 
 	tokenizer = bert_models[choosen_model_embedding]['tokenizer']
-	model = bert_models[choosen_model_embedding]['tokenizer']
+	model = bert_models[choosen_model_embedding]['model']
 	model_hidden_size = model.config.hidden_size
  
-	print(' => Getting data')
+	print('=> Getting data')
 	dataloaders = get_dataloaders(get_datasets(), tokenizer, batch_size)
 	datasets_name = list(dataloaders.keys())
 	print(' DONE\n')
@@ -52,7 +63,7 @@ def main():
 	timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	create_ts_dir_res(timestamp)
  
-	print(f' => Obtaining Pretrained {choosen_model_embedding} Embeddings')
+	print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
 	be = BaseEmbedding(model, device, dataloaders, bert_models[choosen_model_embedding]['n_layers'])
 	be.save_base_embeddings(choosen_model_embedding)
 	print(' DONE\n')
@@ -85,38 +96,29 @@ def main():
 	bert_lstm = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=False)
 	bert_lstm_bi = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True)
 	bert_gru = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False)
-	bert_gru_bi= BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
+	bert_gru_bi = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
  
  
 	# baselines
 	baselines = Baselines(common_parmas)
-  
+	
+	print('Starting running strategies...')
  
 	methods = [
 		# our approaches
 		main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
 
 		# competitors
-		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
+		#bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
   
 		# baselines
-		baselines
+		#baselines
 	]
  
-	for method in methods: method.run()
- 
-	# run ablations
-	main_approach.bool_ablations = True
-	layer_wise_all.bool_ablations = True
-	layer_wise_mean.bool_ablations = True
-	layer_aggregation.bool_ablations = True
- 
- 
-	for ablation in [main_approach, layer_wise_all, layer_wise_mean, layer_aggregation]: ablation.run()
-	
+	#run_methods(methods)
 
 if __name__ == "__main__":
-	print(f'Running Application on {device}')
+	print(f'Running Application on {device}\n')
 	main()
 	
 

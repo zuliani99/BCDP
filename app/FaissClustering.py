@@ -7,6 +7,7 @@ import time
 from utils import write_csv
 
 class Faiss_KMEANS():
+    
     def __init__(self):
         self.n_clusters_list = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
         self.top_k_list = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
@@ -24,9 +25,8 @@ class Faiss_KMEANS():
             label_clustering: Integer vector where each element represents the cluster label for the corresponding sentence
         """
 
-        clustering = faiss.Kmeans(sentences.shape[1], n_clusters,
-                                spherical=spherical,
-                                gpu=True)
+        clustering = faiss.Kmeans(sentences.shape[1], n_clusters, spherical=spherical, gpu=True)
+        
         clustering.train(sentences)
 
         _, label_clustering = clustering.index.search(sentences, 1)
@@ -47,10 +47,9 @@ class Faiss_KMEANS():
         centroids_sentiment = []
         for i in range(n_clusters):
             indices = np.where(label_clustering == i)[0]
-            if np.sum(sentiment[indices]) >= 0:
-                centroids_sentiment.append(1)
-            else:
-                centroids_sentiment.append(-1)
+            if np.sum(sentiment[indices]) >= 0: centroids_sentiment.append(1)
+            else: centroids_sentiment.append(-1)
+            
         return np.array(centroids_sentiment)
 
 
@@ -63,7 +62,7 @@ class Faiss_KMEANS():
         @param sentiment: Integer vector, only values -1 or 1, corresponding sentiment of each sentence
 
         @return:
-            confidence: numpy.ndarray, purity value of the cluster; 0 if both classes are equally often present in the cluster, 1 if only one class is present"""
+            confidence: int, average confidence measure of all clusters in our space"""
 
         confidence = np.zeros(n_clusters)
 
@@ -77,7 +76,7 @@ class Faiss_KMEANS():
 
             confidence[i] = abs(count_neg - count_pos)/(count_neg + count_pos)
 
-        return confidence
+        return np.mean(confidence)
 
 
 
@@ -92,8 +91,7 @@ class Faiss_KMEANS():
             Integer vector, only values -1 or 1, the corresponding sentiment for each query
         """
 
-        def compute_result(query, centroids=centroids,
-                        centroids_labeled=centroids_labeled, top_k=top_k):
+        def compute_result(query, centroids=centroids, centroids_labeled=centroids_labeled, top_k=top_k):
             dp_score = centroids.dot(query)
             top_k_ind = np.argpartition(dp_score, -top_k)[-top_k:]
             if np.sum(centroids_labeled[top_k_ind]) >= 0: return 1
@@ -114,8 +112,7 @@ class Faiss_KMEANS():
         """
         result_list = 0
         for i in range(ground_truth.shape[0]):
-            if model_results[i] == ground_truth[i]:
-                result_list += 1
+            if model_results[i] == ground_truth[i]: result_list += 1
         return result_list/ground_truth.shape[0]
 
 
@@ -147,7 +144,6 @@ class Faiss_KMEANS():
         @return: None
         """
 
-        #x_train, x_test, y_train, y_test = read_embbedings(dataset_name, methods_name)
         x_train, x_test, y_train, y_test = data
 
         for n_clusters in self.n_clusters_list:
@@ -162,11 +158,8 @@ class Faiss_KMEANS():
                     query_result = self.get_result(x_test, centroids, sentiment_centroids, top_k=top_k)
                     end = time.time()
                     
-                    #test_accuracy = self.accuracy_result(query_result, y_test)
-                    #harmonic_mean = self.F1(query_result, y_test)
                     evaluations = self.report(query_result, y_test)
 
-                    #print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, test_accuracy))
                     print('Result (n. clusters = {0} and k = {1}): {2}'.format(n_clusters, top_k, evaluations[-1]))
 
                     write_csv(
