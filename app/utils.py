@@ -84,7 +84,7 @@ def read_embbedings(dataset_name, choosen_model_embedding, bool_validation = Fal
 		y_train = np.concatenate([np.load(f'{path}/labels/train_labels.npy'), np.load(f'{path}/labels/val_labels.npy')], axis=0, dtype=np.int8)
 		y_test = np.load(f'{path}/labels/test_labels.npy').astype(np.int8)
   
-		print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
+		#print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
   
 		return x_train, x_test, y_train, y_test
 
@@ -101,7 +101,7 @@ def read_embbedings(dataset_name, choosen_model_embedding, bool_validation = Fal
 		y_val[y_val == -1] = 0
 		y_test[y_test == -1] = 0
   
-		print(np.unique(y_train), np.unique(y_val), np.unique(y_test))
+		#print(np.unique(y_train), np.unique(y_val), np.unique(y_test))
   
 		return x_train, x_val, x_test, torch.tensor(y_train, dtype=torch.long), torch.tensor(y_val, dtype=torch.long), torch.tensor(y_test, dtype=torch.long)
 
@@ -125,13 +125,16 @@ def accuracy_result(model_results, ground_truth):
 
 
 
-def get_competitors_embeddings_dls(ds_name, choosen_model_embedding):
+def get_competitors_embeddings_dls(ds_name, choosen_model_embedding, batch_size):
 	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, choosen_model_embedding, bool_validation=True)
 
 	# we use embedding approach of the main strategy
-	x_train = torch.squeeze(torch.clone(x_train[:,-1,:]))
-	x_val = torch.squeeze(torch.clone(x_val[:,-1,:]))
-	x_test = torch.squeeze(torch.clone(x_test[:,-1,:]))
+	# there were torch.squeeze
+	x_train = torch.unsqueeze(torch.clone(x_train[:,-1,:]), dim=1)
+	x_val = torch.unsqueeze(torch.clone(x_val[:,-1,:]), dim=1)
+	x_test = torch.unsqueeze(torch.clone(x_test[:,-1,:]), dim=1)
+ 
+	#print(x_train.shape, x_val.shape, x_test.shape)
    
-	return get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test)
+	return get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_size)
  

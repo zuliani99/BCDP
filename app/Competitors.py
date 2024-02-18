@@ -37,9 +37,9 @@ class BertLinears(Train_Evaluate):
 	 
 			print(f'--------------- {ds_name} ---------------')
    
-			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding)
+			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
    
-			self.fit(ds_name, self.__class__.__name__, train_dl, val_dl)
+			self.fit(ds_name, train_dl, val_dl)
 
 			start = time.time()
 			test_accuracy, test_loss = self.test(test_dl)
@@ -111,21 +111,21 @@ class BertLSTMGRUModel(nn.Module):
 class BertLSTMGRU(Train_Evaluate):
 	def __init__(self, params, common_parmas, pt_hidden_size, lstm_gru, bidirectional=False):
           
-		super().__init__('Bert_bi{lstm_gru}' if bidirectional is True else 'Bert_{lstm_gru}', params, BertLSTMGRUModel(
+		super().__init__(f'Bert_bi{lstm_gru}' if bidirectional is True else f'Bert_{lstm_gru}', params, BertLSTMGRUModel(
       						pt_hidden_size, num_classes=2, bidirectional=bidirectional,
                             lstm_gru = 
-                            	nn.GRU(
+                            	nn.LSTM(
 									input_size=pt_hidden_size, hidden_size=pt_hidden_size,
 									batch_first=True, bidirectional=bidirectional
 								) if lstm_gru == 'LSTM' else
-                           	 	nn.LSTM(
+                           	 	nn.GRU(
                                   	input_size=pt_hidden_size, hidden_size=pt_hidden_size,
 									batch_first=True, bidirectional=bidirectional
 								)  
                         	)
                    		)
   
-		self.custom_name = 'Bert_bi{lstm_gru}' if bidirectional is True else 'Bert_{lstm_gru}'
+		self.custom_name = f'Bert_bi{lstm_gru}' if bidirectional is True else f'Bert_{lstm_gru}'
 		self.datasets_name = common_parmas['datasets_name']
 		self.timestamp = common_parmas['timestamp']
 		self.choosen_model_embedding = common_parmas['choosen_model_embedding']
@@ -140,9 +140,9 @@ class BertLSTMGRU(Train_Evaluate):
 	 
 			print(f'--------------- {ds_name} ---------------')
 			
-			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding)
+			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
 
-			self.fit(ds_name, self.custom_name, train_dl, val_dl)
+			self.fit(ds_name, train_dl, val_dl)
    
 			start = time.time()
 			test_accuracy, test_loss = self.test(test_dl)
@@ -152,7 +152,7 @@ class BertLSTMGRU(Train_Evaluate):
 			write_csv(
 				ts_dir=self.timestamp,
 				head = ['method', 'dataset', 'test_accuracy', 'test_loss', 'elapsed'],
-				values = [self.__class__.__name__, ds_name, test_accuracy, test_loss, end-start],
+				values = [self.custom_name, ds_name, test_accuracy, test_loss, end-start],
 				categoty_type = 'competitors'
 			)
 

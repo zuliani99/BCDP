@@ -79,13 +79,13 @@ class Train_Evaluate(object):
                 bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
             
                 if self.name == 'LayerAggregation': outputs, _ = self.model(bert_ebmbeds)
-                else: outputs = self.model(bert_ebmbeds)
+                else: outputs = torch.squeeze(self.model(bert_ebmbeds))
                      
                 accuracy = self.score_fn(outputs, labels)
                 loss = self.loss_fn(outputs, labels)
 
                 val_accuracy += accuracy
-                val_loss += loss
+                val_loss += loss.item()
 
             val_accuracy /= len(val_dl)
             val_loss /= len(val_dl)
@@ -110,9 +110,9 @@ class Train_Evaluate(object):
 
 
 
-    def fit(self, model_name, train_dl, val_dl):
+    def fit(self, dataset_name, train_dl, val_dl):
         
-        check_best_path = f'{self.best_check_filename}/{model_name}_{self.name}.pth.tar'
+        check_best_path = f'{self.best_check_filename}/{dataset_name}_{self.name}.pth.tar'
         
         actual_epoch = 0
         best_val_loss = float('inf')
@@ -136,13 +136,16 @@ class Train_Evaluate(object):
 
 
             for bert_ebmbeds, labels in train_dl:
+                
+                #print(bert_ebmbeds.shape)
+                
                 bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
                                                 
                 # zero the parameter gradients
                 self.optimizer.zero_grad()
                 
                 if self.name == 'LayerAggregation': outputs, _ = self.model(bert_ebmbeds)
-                else: outputs = self.model(bert_ebmbeds)
+                else: outputs = torch.squeeze(self.model(bert_ebmbeds))
                 
                 loss = self.loss_fn(outputs, labels)
                 
@@ -152,7 +155,7 @@ class Train_Evaluate(object):
                 accuracy = self.score_fn(outputs, labels)
 
                 train_accuracy += accuracy
-                train_loss += loss
+                train_loss += loss.item()
 
     
 

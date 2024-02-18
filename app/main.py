@@ -63,10 +63,10 @@ def main():
 	timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	create_ts_dir_res(timestamp)
  
-	#print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
-	#be = BaseEmbedding(model, device, ds_name_dataloaders, bert_models[choosen_model_embedding]['n_layers'])
-	#be.save_base_embeddings(choosen_model_embedding)
-	#print(' DONE\n')
+	print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
+	be = BaseEmbedding(model, device, ds_name_dataloaders, bert_models[choosen_model_embedding]['n_layers'])
+	be.save_base_embeddings(choosen_model_embedding)
+	print(' DONE\n')
  
 	training_params = {
 		'device': device,
@@ -105,15 +105,14 @@ def main():
 	print('Starting running strategies...')
  
 	methods = [
-		# our approaches
-		main_approach, layer_wise_all, layer_wise_mean, 
-		#layer_aggregation,
+		# our approaches -> OK
+		#main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
 
-		# competitors
-		#bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
+		# competitors # -> OK
+		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
   
-		# baselines
-		#baselines
+		# baselines -> OK
+		#baselines 
 	]
  
 	run_methods(methods)

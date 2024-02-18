@@ -229,8 +229,8 @@ class LayerAggregation(Approaches):
 			x_test, y_test = self.get_LayerAggregation_Embeddigns(test_dl)
 			print(' DONE\n')
    
-			x_train = np.vstack((x_train, x_val))
-			y_train = np.append(y_train, y_val)
+			x_train = np.vstack((x_train, x_val)).astype(np.float32)
+			y_train = np.append(y_train, y_val).astype(np.float32)
    
 			y_train[y_train == 0] = -1
 			y_test[y_test == 0] = -1

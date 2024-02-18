@@ -9,9 +9,9 @@ from utils import write_csv
 class Faiss_KMEANS():
     
     def __init__(self):
+        
         self.n_clusters_list = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
         self.top_k_list = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
-
 
 
     def k_means(self, sentences, n_clusters, spherical=False):
@@ -47,10 +47,8 @@ class Faiss_KMEANS():
         centroids_sentiment = []
         for i in range(n_clusters):
             indices = np.where(label_clustering == i)[0]
-            if np.sum(sentiment[indices]) >= 0:
-                centroids_sentiment.append(1)
-            else:
-                centroids_sentiment.append(-1)
+            if np.sum(sentiment[indices]) >= 0: centroids_sentiment.append(1)
+            else: centroids_sentiment.append(-1)
         return np.array(centroids_sentiment)
 
 
@@ -127,11 +125,11 @@ class Faiss_KMEANS():
         @return:
             tuple containing a dictionary with precision, recall, F1-measure for the negative class, one dictionary for the positive class and the accuracy """
         
-        print(y_pred.dtype, y_true.dtype)
+        '''print(y_pred.dtype, y_true.dtype)
         print(np.unique(y_pred), np.unique(y_true))
-        print(y_pred, y_true)
+        print(y_pred, y_true)'''
         
-        results = classification_report(y_true, y_pred, output_dict=True, zero_division=0)#, labels=['negative', 'positive'])
+        results = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
         return results['accuracy'], results['-1']['f1-score'], results['1']['f1-score']
 
 
@@ -149,7 +147,7 @@ class Faiss_KMEANS():
 
         x_train, x_test, y_train, y_test = data
         
-        print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
+        #print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
                 
         for n_clusters in self.n_clusters_list:
             

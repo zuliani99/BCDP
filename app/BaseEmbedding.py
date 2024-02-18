@@ -42,34 +42,34 @@ class BaseEmbedding(object):
     
 				if not save_labels_npy and not save_embeddings_npy: 
 					print(f' already made for {dl_name}!')
-				else:
+					continue
         
-					labels_npy = np.empty((0), dtype=np.int8)
-					embeddings_npy = np.empty((0, self.embeddings_dim[0], self.embeddings_dim[1]))
+				labels_npy = np.empty((0), dtype=np.int8)
+				embeddings_npy = np.empty((0, self.embeddings_dim[0], self.embeddings_dim[1]))
 		
-					with torch.inference_mode(): # Allow inference mode
-						for idx, (dictionary, labels) in enumerate(dataloader):
-							
-							if save_labels_npy:
-								labels_npy = np.append(labels_npy, np.array([-1 if x == 0 else x for x in torch.squeeze(labels).numpy()]))
+				with torch.inference_mode(): # Allow inference mode
+					for idx, (dictionary, labels) in enumerate(dataloader):
+						
+						if save_labels_npy:
+							labels_npy = np.append(labels_npy, np.array([-1 if x == 0 else x for x in torch.squeeze(labels).numpy()]))
 
-							if save_embeddings_npy:
-								for key in list(dictionary.keys()): dictionary[key] = dictionary[key].to(self.device)
+						if save_embeddings_npy:
+							for key in list(dictionary.keys()): dictionary[key] = dictionary[key].to(self.device)
 				
-								embeds = self.model(dictionary).cpu().detach().numpy()
+							embeds = self.model(dictionary).cpu().detach().numpy()
 				
-								embeddings_npy = np.vstack((embeddings_npy, embeds))
+							embeddings_npy = np.vstack((embeddings_npy, embeds))
 
-								if(idx % 100 == 0):
-									if not os.path.exists(path_embeddings): np.save(path_embeddings, embeddings_npy)
-									else: np.save(path_embeddings, np.vstack((np.load(path_embeddings), embeddings_npy)))
+							if(idx % 100 == 0):
+								if not os.path.exists(path_embeddings): np.save(path_embeddings, embeddings_npy)
+								else: np.save(path_embeddings, np.vstack((np.load(path_embeddings), embeddings_npy)))
 
-									embeddings_npy = np.empty((0, self.embeddings_dim[0], self.embeddings_dim[1]))
+								embeddings_npy = np.empty((0, self.embeddings_dim[0], self.embeddings_dim[1]))
 								
 			
-						if save_labels_npy: np.save(path_labels, labels_npy)
+					if save_labels_npy: np.save(path_labels, labels_npy)
 
-						if save_embeddings_npy and (idx % 100 != 0):
-							np.save(path_embeddings, np.vstack((np.load(path_embeddings), embeddings_npy)))
+					if save_embeddings_npy and (idx % 100 != 0):
+						np.save(path_embeddings, np.vstack((np.load(path_embeddings), embeddings_npy)))
 
 			print('	-> DONE')
