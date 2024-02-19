@@ -73,7 +73,10 @@ class BertLSTMGRUModel(nn.Module):
 		self.bidirectional = bidirectional
 		self.lstm_gru = lstm_gru
 		self.dropout = nn.Dropout(0.5)
-		self.fc1 = nn.Linear(self.hidden_size * 2 if self.bidirectional else self.hidden_size, self.hidden_size)
+		self.fc1 = nn.Linear(
+      					self.hidden_size * 2 if self.bidirectional else self.hidden_size, 
+                       	self.hidden_size if self.bidirectional else num_classes
+                    )
 		self.fc2 = nn.Linear(self.hidden_size, num_classes)
 		self.sigmoid = nn.Sigmoid()
  
@@ -104,9 +107,11 @@ class BertLSTMGRUModel(nn.Module):
         
 	def init_hidden(self, batch_size):
 		weight = next(self.parameters()).data
-		hidden = (weight.new(2 if self.bidirectional else 1, batch_size, self.hidden_size).zero_(),
+		if self.lstm_gru.__class__.__name__ == 'LSTM':
+			hidden = (weight.new(2 if self.bidirectional else 1, batch_size, self.hidden_size).zero_(),
 					weight.new(2 if self.bidirectional else 1, batch_size, self.hidden_size).zero_())
-
+		else:
+			hidden = weight.new(2 if self.bidirectional else 1, batch_size, self.hidden_size).zero_()
 		return hidden
 
 

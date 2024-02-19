@@ -139,9 +139,7 @@ class Train_Evaluate(object):
         actual_patience = 0
 
         if os.path.exists(check_best_path):
-            print(f' => Loading best checkpoint')
             actual_patience, actual_epoch, best_val_loss = self.__load_best_checkpoint(check_best_path)
-            print(' DONE\n')
         
         
         if actual_epoch + 1 == self.epochs:
