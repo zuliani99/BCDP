@@ -156,9 +156,7 @@ class Train_Evaluate(object):
 
 
             for bert_ebmbeds, labels in train_dl:
-                
-                #print(bert_ebmbeds.shape)
-                
+                                
                 bert_ebmbeds, labels = bert_ebmbeds.to(self.device), labels.to(self.device)
                                                 
                 # zero the parameter gradients
@@ -191,7 +189,7 @@ class Train_Evaluate(object):
 
 
             if(val_loss < best_val_loss):
-                best_val_loss = val_accuracy
+                best_val_loss = val_loss
                 actual_patience = 0
                 self.__save_best_checkpoint(check_best_path, actual_patience, epoch, best_val_loss)
             else:

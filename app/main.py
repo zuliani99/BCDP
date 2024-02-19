@@ -18,13 +18,17 @@ from transformers import DistilBertTokenizer, DistilBertModel, BertTokenizer, Be
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-m', '--model', type=str, choices=['BERT', 'DISTILBERT'], required=True, help='Pretreined BERT model from Huggingface')
 parser.add_argument('-a', '--ablations', type=bool, required=True, help='Bool ablations')
+parser.add_argument('-m', '--model', type=str, choices=['BERT', 'DISTILBERT'], required=True, help='Pretreined BERT model from Huggingface')
 
 args = parser.parse_args()
 
-base_embeds_model = args.model #'DISTILBERT'
-bool_ablations = args.ablations #False
+base_embeds_model = args.model
+bool_ablations = args.ablations
+
+###########################################
+#if bool_ablations: bool_ablations = False
+###########################################
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -58,7 +62,7 @@ def main():
     	
 	batch_size = 128
 	epochs = 100
-	patience = 10
+	patience = 20
 
 	tokenizer = bert_models[base_embeds_model]['tokenizer']
 	model = bert_models[base_embeds_model]['model']
@@ -121,7 +125,7 @@ def main():
 		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
   
 		# baselines
-		#baselines 
+		baselines 
 	]
  
 	run_methods(methods)

@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
+import os
 
 
 class Approaches(object):
@@ -25,41 +26,43 @@ class Approaches(object):
 	def run_clustering(self, ds_name, method_name, data):
     
 		x_train, x_test, y_train, y_test = data
-    
-		ablations_dict = {}
-   
+       
 		if self.bool_ablations:
 			print(f'--------------- {ds_name} - PCA & TSNE ablations ---------------')
-				
-			pca = PCA(n_components=2)
-			tsne = TSNE()
+
+			ablations_dict = {
+				'PCA': { 'method': PCA(n_components=2) },
+				'TSNE': { 'method': TSNE() }
+			}
+    
 	
-			ablations_dict['pca'] = {'x_train': pca.fit_transform(x_train), 'x_test': pca.fit_transform(x_test)}
-			ablations_dict['tsne'] = {'x_train': tsne.fit_transform(x_train), 'x_test': tsne.fit_transform(x_test)}
-				
-			for ab_name, x_reduced in ablations_dict.items():
+			for ab_name, dict_method in ablations_dict.items():
        
 				print(f'Running {ab_name} ablations\n')
-    
-				print(' => Saving reduced embeddings:')
-				np.save(
-        			f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}_train.npy',
-            		x_reduced['x_train']
-				)
-				np.save(
-        			f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}_test.npy',
-            		x_reduced['x_test']
-				)
-				print(' DONE\n')
-					
+       
+				path_reduced_embeds = f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}'
+				for str_x, x in [('x_train', x_train), ('x_test', x_test)]:
+					if os.path.exists(f'{path_reduced_embeds}_{str_x}.npy'):
+						print(f' => Loading reduced embeddings {str_x}')
+						dict_method[str_x] = np.load(f'{path_reduced_embeds}_{str_x}.npy')
+						print(' DONE\n')
+					else:
+						print(f' => Running {ab_name} on the embedding of {str_x} - {ds_name} from {method_name}')
+						dict_method[str_x] = dict_method['method'].fit_transform(x)
+						print(' => Saving reduced embeddings:')
+						np.save(f'{path_reduced_embeds}_{str_x}.npy', dict_method[str_x])
+						print(' DONE\n')
+
+				print(dict_method['x_train'].shape, dict_method['x_test'].shape)
+
 				self.faiss_kmeans.run_faiss_kmeans(
         			ds_name,
            			f'{method_name}_{ab_name}',
               		self.timestamp,
                 	'our_ablations',
-					(x_reduced['x_train'], x_reduced['x_test'], y_train, y_test)
+					(np.copy(dict_method['x_train']), np.copy(dict_method['x_test']), y_train, y_test)
      			)
-    
+
 			print('----------------------------------------------------------------\n')
 			
 		else:
