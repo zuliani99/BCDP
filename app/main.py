@@ -8,7 +8,7 @@ from utils import accuracy_score, create_ts_dir_res, get_datasets
 from TextDataset import get_dsname_dataloaders
 
 from Approaches import MainApproch, LayerWise, LayerAggregation
-from Competitors import BertLinears, BertLSTMGRU
+from Competitors import Linear, LSTMGRU
 from Baselines import Baselines
 
 import torch
@@ -23,7 +23,7 @@ parser.add_argument('-a', '--ablations', type=bool, required=True, help='Bool ab
 
 args = parser.parse_args()
 
-choosen_model_embedding = args.model #'DISTILBERT'
+base_embeds_model = args.model #'DISTILBERT'
 bool_ablations = args.ablations #False
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -60,8 +60,8 @@ def main():
 	epochs = 100
 	patience = 10
 
-	tokenizer = bert_models[choosen_model_embedding]['tokenizer']
-	model = bert_models[choosen_model_embedding]['model']
+	tokenizer = bert_models[base_embeds_model]['tokenizer']
+	model = bert_models[base_embeds_model]['model']
 	model_hidden_size = model.config.hidden_size
  
 	print('=> Getting data')
@@ -72,9 +72,9 @@ def main():
 	timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 	create_ts_dir_res(timestamp)
  
-	print(f'=> Obtaining Pretrained {choosen_model_embedding} Embeddings')
-	be = BaseEmbedding(model, device, ds_name_dataloaders, bert_models[choosen_model_embedding]['n_layers'])
-	be.save_base_embeddings(choosen_model_embedding)
+	print(f'=> Obtaining Pretrained {base_embeds_model} Embeddings')
+	be = BaseEmbedding(model, device, ds_name_dataloaders, bert_models[base_embeds_model]['n_layers'])
+	be.save_base_embeddings(base_embeds_model)
 	print(' DONE\n')
  
 	training_params = {
@@ -90,22 +90,22 @@ def main():
 	common_parmas = {
 		'datasets_name': datasets_name, 
 		'timestamp': timestamp,
-		'choosen_model_embedding': choosen_model_embedding
+		'base_embeds_model': base_embeds_model
 	}
 
 	# our approaches
 	main_approach = MainApproch(common_parmas, bool_ablations)
-	layer_wise_all = LayerWise(common_parmas, bert_models[choosen_model_embedding]['n_layers'] * 768, bool_ablations)
+	layer_wise_all = LayerWise(common_parmas, bert_models[base_embeds_model]['n_layers'] * 768, bool_ablations)
 	layer_wise_mean = LayerWise(common_parmas, 768, bool_ablations)
-	layer_aggregation = LayerAggregation(training_params, common_parmas, bert_models[choosen_model_embedding]['n_layers'], 768, bool_ablations)
+	layer_aggregation = LayerAggregation(training_params, common_parmas, bert_models[base_embeds_model]['n_layers'], 768, bool_ablations)
  
 	
 	# competitors
-	bert_linears = BertLinears(training_params, common_parmas, model_hidden_size)
-	bert_lstm = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=False)
-	bert_lstm_bi = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True)
-	bert_gru = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False)
-	bert_gru_bi = BertLSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
+	bert_linears = Linear(training_params, common_parmas, model_hidden_size)
+	bert_lstm = LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=False)
+	bert_lstm_bi = LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True)
+	bert_gru = LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False)
+	bert_gru_bi = LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
  
  
 	# baselines
@@ -121,7 +121,7 @@ def main():
 		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
   
 		# baselines
-		baselines 
+		#baselines 
 	]
  
 	run_methods(methods)

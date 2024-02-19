@@ -14,11 +14,11 @@ from sklearn.manifold import TSNE
 
 
 class Approaches(object):
-	def __init__(self, timestamp, choosen_model_embedding, embeddings_dim = None, bool_ablations = False):
+	def __init__(self, timestamp, base_embeds_model, embeddings_dim = None, bool_ablations = False):
 		self.timestamp = timestamp
 		self.embeddings_dim = embeddings_dim
 		self.bool_ablations = bool_ablations
-		self.choosen_model_embedding = choosen_model_embedding
+		self.base_embeds_model = base_embeds_model
 		self.faiss_kmeans = Faiss_KMEANS()
   
   
@@ -43,11 +43,11 @@ class Approaches(object):
     
 				print(' => Saving reduced embeddings:')
 				np.save(
-        			f'app/embeddings/{self.choosen_model_embedding}/{ds_name}/ablations/{ab_name}_{method_name}_train.npy',
+        			f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}_train.npy',
             		x_reduced['x_train']
 				)
 				np.save(
-        			f'app/embeddings/{self.choosen_model_embedding}/{ds_name}/ablations/{ab_name}_{method_name}_test.npy',
+        			f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}_test.npy',
             		x_reduced['x_test']
 				)
 				print(' DONE\n')
@@ -81,7 +81,7 @@ class Approaches(object):
 class MainApproch(Approaches):
 	def __init__(self, common_parmas, bool_ablations):
      
-		super().__init__(common_parmas['timestamp'], common_parmas['choosen_model_embedding'], bool_ablations = bool_ablations)
+		super().__init__(common_parmas['timestamp'], common_parmas['base_embeds_model'], bool_ablations = bool_ablations)
 		self.datasets_name = common_parmas['datasets_name']
 
 
@@ -91,7 +91,7 @@ class MainApproch(Approaches):
 		  
 		for ds_name in self.datasets_name:
 
-			x_train, x_test, y_train, y_test = read_embbedings(ds_name, self.choosen_model_embedding)
+			x_train, x_test, y_train, y_test = read_embbedings(ds_name, self.base_embeds_model)
 			# [#sentence, #layers, 768] -> [#sentence, 768] 
 
 			x_train = np.squeeze(np.copy(x_train[:,-1,:]))
@@ -111,7 +111,7 @@ class MainApproch(Approaches):
 class LayerWise(Approaches):
 	def __init__(self, common_parmas, embeddings_dim, bool_ablations):
      
-		super().__init__(common_parmas['timestamp'], common_parmas['choosen_model_embedding'], embeddings_dim = embeddings_dim, bool_ablations = bool_ablations)
+		super().__init__(common_parmas['timestamp'], common_parmas['base_embeds_model'], embeddings_dim = embeddings_dim, bool_ablations = bool_ablations)
   
 		self.datasets_name = common_parmas['datasets_name']
 		self.name = f'{self.__class__.__name__}_{embeddings_dim}'
@@ -123,7 +123,7 @@ class LayerWise(Approaches):
 	 
 		for ds_name in self.datasets_name:
 			
-			x_train, x_test, y_train, y_test = read_embbedings(ds_name, self.choosen_model_embedding)
+			x_train, x_test, y_train, y_test = read_embbedings(ds_name, self.base_embeds_model)
    
 			if self.embeddings_dim == 768:
 				# [#sentence, #layers, 768] -> [#sentence, 768] 
@@ -178,11 +178,11 @@ class LayerAggregation(Approaches):
 	
 	def __init__(self, params, common_parmas, n_layers, embeddings_dim, bool_ablations):
 		
-		super().__init__(common_parmas['timestamp'], common_parmas['choosen_model_embedding'], embeddings_dim = embeddings_dim, bool_ablations = bool_ablations)
+		super().__init__(common_parmas['timestamp'], common_parmas['base_embeds_model'], embeddings_dim = embeddings_dim, bool_ablations = bool_ablations)
 		self.datasets_name = common_parmas['datasets_name']
 		self.n_layers = n_layers
   
-		self.tran_evaluate = Train_Evaluate(self.__class__.__name__, params, SelfAttentionLayer(self.embeddings_dim, n_layers, output_size=2, attention_heads=8))
+		self.tran_evaluate = Train_Evaluate(self.__class__.__name__, params, self.base_embeds_model, SelfAttentionLayer(self.embeddings_dim, n_layers, output_size=2, attention_heads=8))
   
   
 	def get_LayerAggregation_Embeddigns(self, dataloader):
@@ -220,7 +220,7 @@ class LayerAggregation(Approaches):
       
 			self.tran_evaluate.load_initial_checkpoint()
 
-			x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, self.choosen_model_embedding, bool_validation=True)
+			x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, self.base_embeds_model, bool_validation=True)
       
 			# create tensor dataloaders
 			train_dl, val_dl, test_dl = get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, self.tran_evaluate.batch_size)

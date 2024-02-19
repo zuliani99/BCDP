@@ -7,10 +7,10 @@ import torch
 import torch.nn as nn
 
 
-class BertLinearLayer(nn.Module):
+class LinearLayer(nn.Module):
 
 	def __init__(self, pt_hidden_size, n_classes):
-		super(BertLinearLayer, self).__init__()
+		super(LinearLayer, self).__init__()
 		self.drop = nn.Dropout(p=0.5)
 		self.out = nn.Linear(pt_hidden_size, n_classes)
   
@@ -19,14 +19,13 @@ class BertLinearLayer(nn.Module):
 
 
 
-class BertLinears(Train_Evaluate):
+class Linear(Train_Evaluate):
 	def __init__(self, params, common_parmas, pt_hidden_size):
      
-		super().__init__(self.__class__.__name__, params, BertLinearLayer(pt_hidden_size, n_classes=2))
+		super().__init__(self.__class__.__name__, params, common_parmas['base_embeds_model'], LinearLayer(pt_hidden_size, n_classes=2))
 		
 		self.datasets_name = common_parmas['datasets_name']
 		self.timestamp = common_parmas['timestamp']
-		self.choosen_model_embedding = common_parmas['choosen_model_embedding']
 		
 
 	def run(self):
@@ -39,7 +38,7 @@ class BertLinears(Train_Evaluate):
    
 			self.load_initial_checkpoint()
    
-			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
+			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.base_embeds_model, self.batch_size)
    
 			self.fit(ds_name, train_dl, val_dl)
 
@@ -65,9 +64,9 @@ class BertLinears(Train_Evaluate):
 
 
 
-class BertLSTMGRUModel(nn.Module):
+class LSTMGRUModel(nn.Module):
 	def __init__(self, hidden_size, num_classes, bidirectional, lstm_gru):
-		super(BertLSTMGRUModel, self).__init__()
+		super(LSTMGRUModel, self).__init__()
 		
 		self.hidden_size = hidden_size
 		self.bidirectional = bidirectional
@@ -86,8 +85,6 @@ class BertLSTMGRUModel(nn.Module):
 		batch_size = x.shape[0]
 		hidden = self.init_hidden(batch_size)
   
-		#print(x.shape, hidden.shape)
-
 		output, _ = self.lstm_gru(x, hidden)
 
 		if self.bidirectional:
@@ -115,10 +112,11 @@ class BertLSTMGRUModel(nn.Module):
 		return hidden
 
 
-class BertLSTMGRU(Train_Evaluate):
+class LSTMGRU(Train_Evaluate):
 	def __init__(self, params, common_parmas, pt_hidden_size, lstm_gru, bidirectional=False):
           
-		super().__init__(f'Bert_bi{lstm_gru}' if bidirectional is True else f'Bert_{lstm_gru}', params, BertLSTMGRUModel(
+		super().__init__(f'Bert_bi{lstm_gru}' if bidirectional is True else f'Bert_{lstm_gru}', params, common_parmas['base_embeds_model'],
+                   		LSTMGRUModel(
       						pt_hidden_size, num_classes=2, bidirectional=bidirectional,
                             lstm_gru = 
                             	nn.LSTM(
@@ -135,7 +133,6 @@ class BertLSTMGRU(Train_Evaluate):
 		self.custom_name = f'Bert_bi{lstm_gru}' if bidirectional is True else f'Bert_{lstm_gru}'
 		self.datasets_name = common_parmas['datasets_name']
 		self.timestamp = common_parmas['timestamp']
-		self.choosen_model_embedding = common_parmas['choosen_model_embedding']
 	
 
 		
@@ -149,7 +146,7 @@ class BertLSTMGRU(Train_Evaluate):
    
 			self.load_initial_checkpoint()
 			
-			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.choosen_model_embedding, self.batch_size)
+			train_dl, val_dl, test_dl = get_competitors_embeddings_dls(ds_name, self.base_embeds_model, self.batch_size)
 
 			self.fit(ds_name, train_dl, val_dl)
    

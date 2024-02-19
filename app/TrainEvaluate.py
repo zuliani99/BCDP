@@ -5,7 +5,7 @@ import os
 from utils import init_params
 
 class Train_Evaluate(object):
-    def __init__(self, name, params, model):
+    def __init__(self, name, params, base_embeds_model, model):
   
         self.batch_size = params['batch_size']
         self.loss_fn = params['loss_fn']
@@ -15,8 +15,10 @@ class Train_Evaluate(object):
         self.device = params['device']
         self.model = model.to(self.device)
         self.name = name
+        self.base_embeds_model = base_embeds_model
   
-        self.check_filename = 'app/checkpoints'
+        self.check_filename = f'app/checkpoints/{base_embeds_model}'
+        self.init_check_filename = f'{self.check_filename}/init/init_{self.name}.pth.tar'
         
         self.model.apply(init_params)
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=2e-5)
@@ -24,10 +26,10 @@ class Train_Evaluate(object):
         self.__save_init_checkpoint()
         
     def __save_init_checkpoint(self):
-        if not os.path.exists(f'{self.check_filename}/init_{self.name}.pth.tar'):
+        if not os.path.exists(self.init_check_filename):
             print(f' => Saving initial {self.name} checkpoint')
             checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict()}
-            torch.save(checkpoint, f'{self.check_filename}/init_{self.name}.pth.tar')
+            torch.save(checkpoint, self.init_check_filename)
             print(' DONE\n')
         else:
             print(f' => Initial {self.name} checkpoint already present')
@@ -35,7 +37,7 @@ class Train_Evaluate(object):
     
     def load_initial_checkpoint(self):
         print(f' => Loading initial {self.name} checkpoint')
-        checkpoint = torch.load(f'{self.check_filename}/init_{self.name}.pth.tar', map_location=self.device)
+        checkpoint = torch.load(self.init_check_filename, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         print(' DONE\n')

@@ -73,9 +73,9 @@ def init_params(m):
 
 
 
-def read_embbedings(dataset_name, choosen_model_embedding, bool_validation = False):
+def read_embbedings(dataset_name, base_embeds_model, bool_validation = False):
 
-	path = f'app/embeddings/{choosen_model_embedding}/{dataset_name}'
+	path = f'app/embeddings/{base_embeds_model}/{dataset_name}'
 	
 	if not bool_validation:
 		x_train = np.concatenate([np.load(f'{path}/train_embeddings.npy'), np.load(f'{path}/val_embeddings.npy')], axis=0, dtype=np.float32)
@@ -125,8 +125,8 @@ def accuracy_result(model_results, ground_truth):
 
 
 
-def get_competitors_embeddings_dls(ds_name, choosen_model_embedding, batch_size):
-	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, choosen_model_embedding, bool_validation=True)
+def get_competitors_embeddings_dls(ds_name, base_embeds_model, batch_size):
+	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, base_embeds_model, bool_validation=True)
 
 	# we use embedding approach of the main strategy
 	# there were torch.squeeze

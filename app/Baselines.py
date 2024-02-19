@@ -16,7 +16,7 @@ class Baselines(object):
     def __init__(self, common_parmas):
         self.datasets_name = common_parmas['datasets_name']
         self.timestamp = common_parmas['timestamp']
-        self.choosen_model_embedding = common_parmas['choosen_model_embedding']
+        self.base_embeds_model = common_parmas['base_embeds_model']
         self.sklearn_baseline = [('SVM', SVC()), ('KNN', KNeighborsClassifier()), ('Naive_Bayes', GaussianNB()), ('Logistic_Regression', LogisticRegression())]
         
         
@@ -95,7 +95,7 @@ class Baselines(object):
             
             print(f'--------------- {ds_name} ---------------')
                 
-            x_train, x_test, self.y_train, self.y_test = read_embbedings(ds_name, self.choosen_model_embedding)
+            x_train, x_test, self.y_train, self.y_test = read_embbedings(ds_name, self.base_embeds_model)
                 
             self.x_train = np.squeeze(np.copy(x_train[:,-1,:]))
             self.x_test = np.squeeze(np.copy(x_test[:,-1,:]))
