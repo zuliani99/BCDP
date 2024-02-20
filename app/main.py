@@ -52,14 +52,14 @@ bert_models = {
 def run_methods(methods):
     
 	for methods_group, methods_list in methods.items():
-		if len(methods_list > 0):
+		if len(methods_list) > 0:
 			print(f'---------------------------------- RUNNING {methods_group} ----------------------------------')
 			for method in methods_list: 
 				method.run()
  
-	if bool_ablations and selected_strat['our_approaches']:
+	if bool_ablations and bool_strategies['our_approaches']:
 		# run ablations
-		for ablation in methods['our_approches']:
+		for ablation in methods['our_approaches']:
 			ablation.bool_ablations = True
 			ablation.run()
   
@@ -106,12 +106,12 @@ def main():
  
 	methods = {
 		# our approaches
-		'our_approches': [
+		'our_approaches': [
 			MainApproch(common_parmas, False), 
 			LayerWise(common_parmas, bert_models[base_embeds_model]['n_layers'] * 768, False),
 			LayerWise(common_parmas, 768, False),
 			LayerAggregation(training_params, common_parmas, bert_models[base_embeds_model]['n_layers'], 768, False)
-		] if selected_strat['our_approches'] else [],
+		] if bool_strategies['our_approaches'] else [],
 
 		# competitors
 		'competitors': [
@@ -120,10 +120,10 @@ def main():
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True),
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False),
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
-		] if selected_strat['competitors'] else [] ,
+		] if bool_strategies['competitors'] else [] ,
   
 		# baselines
-		'baselines': [ Baselines(common_parmas) ] if selected_strat['competitors'] else []
+		'baselines': [ Baselines(common_parmas) ] if bool_strategies['competitors'] else []
 	}
  
 	run_methods(methods)
