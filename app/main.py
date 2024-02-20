@@ -25,7 +25,12 @@ args = parser.parse_args()
 
 base_embeds_model = args.model
 bool_ablations = args.ablations
-
+bool_strategies = {
+	'our_approaches': False,
+	'competitors' : False,
+	'baselines': False
+}
+for selected_strat in args.strategies: bool_strategies[selected_strat] = True
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -47,10 +52,12 @@ bert_models = {
 def run_methods(methods):
     
 	for methods_group, methods_list in methods.items():
-		print(f'---------------------------------- RUNNING {methods_group} ----------------------------------')
-		for method in methods_list: method.run()
+		if len(methods_list > 0):
+			print(f'---------------------------------- RUNNING {methods_group} ----------------------------------')
+			for method in methods_list: 
+				method.run()
  
-	if bool_ablations:
+	if bool_ablations and selected_strat['our_approaches']:
 		# run ablations
 		for ablation in methods['our_approches']:
 			ablation.bool_ablations = True
@@ -104,7 +111,7 @@ def main():
 			LayerWise(common_parmas, bert_models[base_embeds_model]['n_layers'] * 768, False),
 			LayerWise(common_parmas, 768, False),
 			LayerAggregation(training_params, common_parmas, bert_models[base_embeds_model]['n_layers'], 768, False)
-		],
+		] if selected_strat['our_approches'] else [],
 
 		# competitors
 		'competitors': [
@@ -113,10 +120,10 @@ def main():
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True),
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False),
 			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
-		],
+		] if selected_strat['competitors'] else [] ,
   
 		# baselines
-		'baselines': [ Baselines(common_parmas) ] 
+		'baselines': [ Baselines(common_parmas) ] if selected_strat['competitors'] else []
 	}
  
 	run_methods(methods)

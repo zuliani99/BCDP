@@ -100,7 +100,6 @@ class MainApproch(Approaches):
 			x_train = np.squeeze(np.copy(x_train[:,-1,:]))
 			x_test = np.squeeze(np.copy(x_test[:,-1,:]))
       
-			print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
       
 			self.run_clustering(ds_name, self.__class__.__name__, (x_train, x_test, y_train, y_test))
 			
