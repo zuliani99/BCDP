@@ -17,7 +17,7 @@ from transformers import DistilBertTokenizer, DistilBertModel, BertTokenizer, Be
 
 
 parser = argparse.ArgumentParser()
-
+parser.add_argument('-s', '--strategies', type=str, choices=['our_approaches', 'competitors', 'baselines'], nargs='+', required=True, help='Possible strategies to run')
 parser.add_argument('-a', '--ablations', type=bool, required=True, help='Bool ablations')
 parser.add_argument('-m', '--model', type=str, choices=['BERT', 'DISTILBERT'], required=True, help='Pretreined BERT model from Huggingface')
 
@@ -26,9 +26,6 @@ args = parser.parse_args()
 base_embeds_model = args.model
 bool_ablations = args.ablations
 
-###########################################
-#if bool_ablations: bool_ablations = False
-###########################################
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -48,12 +45,14 @@ bert_models = {
 
 
 def run_methods(methods):
- 
-	for method in methods: method.run()
+    
+	for methods_group, methods_list in methods.items():
+		print(f'---------------------------------- RUNNING {methods_group} ----------------------------------')
+		for method in methods_list: method.run()
  
 	if bool_ablations:
 		# run ablations
-		for ablation in methods[:4]:
+		for ablation in methods['our_approches']:
 			ablation.bool_ablations = True
 			ablation.run()
   
@@ -97,36 +96,28 @@ def main():
 		'base_embeds_model': base_embeds_model
 	}
 
-	# our approaches
-	main_approach = MainApproch(common_parmas, bool_ablations)
-	layer_wise_all = LayerWise(common_parmas, bert_models[base_embeds_model]['n_layers'] * 768, bool_ablations)
-	layer_wise_mean = LayerWise(common_parmas, 768, bool_ablations)
-	layer_aggregation = LayerAggregation(training_params, common_parmas, bert_models[base_embeds_model]['n_layers'], 768, bool_ablations)
  
-	
-	# competitors
-	bert_linears = Linear(training_params, common_parmas, model_hidden_size)
-	bert_lstm = LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=False)
-	bert_lstm_bi = LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True)
-	bert_gru = LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False)
-	bert_gru_bi = LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
- 
- 
-	# baselines
-	baselines = Baselines(common_parmas)
-	
-	print('Starting running strategies...')
- 
-	methods = [
+	methods = {
 		# our approaches
-		main_approach, layer_wise_all, layer_wise_mean, layer_aggregation,
+		'our_approches': [
+			MainApproch(common_parmas, False), 
+			LayerWise(common_parmas, bert_models[base_embeds_model]['n_layers'] * 768, False),
+			LayerWise(common_parmas, 768, False),
+			LayerAggregation(training_params, common_parmas, bert_models[base_embeds_model]['n_layers'], 768, False)
+		],
 
 		# competitors
-		bert_linears, bert_lstm, bert_lstm_bi, bert_gru, bert_gru_bi,
+		'competitors': [
+			Linear(training_params, common_parmas, model_hidden_size),
+			LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=False),
+			LSTMGRU(training_params, common_parmas, model_hidden_size, 'LSTM', bidirectional=True),
+			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=False),
+			LSTMGRU(training_params, common_parmas, model_hidden_size, 'GRU', bidirectional=True)
+		],
   
 		# baselines
-		baselines 
-	]
+		'baselines': [ Baselines(common_parmas) ] 
+	}
  
 	run_methods(methods)
 

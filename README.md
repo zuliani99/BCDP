@@ -12,12 +12,42 @@ Using this technique we can obtain expressiveness and calculation speed whilst k
 For further improvement of the model's accuracy, we propose a second approach that utilizes layer-wise embeddings of BERT for the benefit of greater expressiveness. Each layer captures the sentence's meaning at a different level of abstraction resulting in multiple embeddings that provide a richer representation of the meaning of the sentence. 
 The second approach is in turn divided into two sub-projects: in the first one, we consider each layer-embedding separately and for each of them we perform what we have described in the previous approach. As regards the second sub-project, an extra attention layer is added to incorporate all the layer-wise embeddings given by BERT (layer-aggregation). In this variation we decided to fine-tune the model by freezing the BERT layers while allowing the newer attention layer to train its weights. This procedure aids to avoid the phenomenon of Catastrophic Forgetting. Another different solution is to fine-tune the complete models with a very low learning rate (2e-5). Continuing the whole model is done to achieve a better vector representation in the output that considers all the different nuances of the different layers in order to solve our problem optimally. Once having extracted the embedding, the remaining procedure is equal to the first approach.
 
-## Enviroment SetUp
+## Used Dataseets
+1. [imdb](https://huggingface.co/datasets/imdb) 
+2. [sst2](https://huggingface.co/datasets/sst2)
+3. [yelp_polarity](https://huggingface.co/datasets/yelp_polarity)
+
+
+## Enviroment Setup
 ```
 conda create --name <env> --file requirements.txt
 ```
 
-## Run
+## Note before running the application
+We would like to inform the user that the obtaining of the base embedding from all of three datasets woould require much time since its dimension expecially for *yelp_polarity*. Thus we have decided to make the embedding public at the following link, please, download the directory and paste it inside the **/app** folder.
+
+## How to Run
 ```
-python app/main.PY
+usage: main.py [-h] -s {our_approaches,competitors,baselines}
+               [{our_approaches,competitors,baselines} ...] -a ABLATIONS -m
+               {BERT,DISTILBERT}
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s {our_approaches,competitors,baselines} [{our_approaches,competitors,baselines} ...], --strategies {our_approaches,competitors,baselines} [{our_approaches,competitors,baselines} ...]
+                        Possible strategies to run
+  -a ABLATIONS, --ablations ABLATIONS
+                        Bool ablations
+  -m {BERT,DISTILBERT}, --model {BERT,DISTILBERT}
+                        Pretreined BERT model from Huggingface
+```
+
+
+## Cite Us
+```
+@online{CBERTdp,
+    author = "Thomas Vecchiato, Riccardo Zuliani, Alice Schirrmeister, Isabel Marie Ritter",
+    title = "Clustering BERT Eembedding via Dot Product (CBERTdp)",
+    url  = "https://github.com/zuliani99/CBERTdp/blob/main/CBERTdp.pdf",
+}
 ```

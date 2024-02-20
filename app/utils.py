@@ -83,9 +83,7 @@ def read_embbedings(dataset_name, base_embeds_model, bool_validation = False):
 			
 		y_train = np.concatenate([np.load(f'{path}/labels/train_labels.npy'), np.load(f'{path}/labels/val_labels.npy')], axis=0, dtype=np.int8)
 		y_test = np.load(f'{path}/labels/test_labels.npy').astype(np.int8)
-  
-		#print(x_train.dtype, x_test.dtype, y_train.dtype, y_test.dtype)
-  
+    
 		return x_train, x_test, y_train, y_test
 
 	else:
@@ -100,9 +98,7 @@ def read_embbedings(dataset_name, base_embeds_model, bool_validation = False):
 		y_train[y_train == -1] = 0
 		y_val[y_val == -1] = 0
 		y_test[y_test == -1] = 0
-  
-		#print(np.unique(y_train), np.unique(y_val), np.unique(y_test))
-  
+    
 		return x_train, x_val, x_test, torch.tensor(y_train, dtype=torch.long), torch.tensor(y_val, dtype=torch.long), torch.tensor(y_test, dtype=torch.long)
 
 
@@ -116,15 +112,6 @@ def get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_s
 
 
 
-def accuracy_result(model_results, ground_truth):
-	result_list = 0
-	for i in range(ground_truth.shape[0]):
-		if model_results[i] == ground_truth[i]:
-			result_list += 1
-	return result_list/ground_truth.shape[0]
-
-
-
 def get_competitors_embeddings_dls(ds_name, base_embeds_model, batch_size):
 	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, base_embeds_model, bool_validation=True)
 
@@ -133,8 +120,6 @@ def get_competitors_embeddings_dls(ds_name, base_embeds_model, batch_size):
 	x_train = torch.unsqueeze(torch.clone(x_train[:,-1,:]), dim=1)
 	x_val = torch.unsqueeze(torch.clone(x_val[:,-1,:]), dim=1)
 	x_test = torch.unsqueeze(torch.clone(x_test[:,-1,:]), dim=1)
- 
-	#print(x_train.shape, x_val.shape, x_test.shape)
-   
+    
 	return get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_size)
  

@@ -9,7 +9,7 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import classification_report
 
-from utils import read_embbedings, write_csv, accuracy_result
+from utils import read_embbedings, write_csv
 
 
 class Baselines(object):
