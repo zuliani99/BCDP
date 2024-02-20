@@ -48,6 +48,6 @@ optional arguments:
 @online{CBERTdp,
     author = "Thomas Vecchiato, Riccardo Zuliani, Alice Schirrmeister, Isabel Marie Ritter",
     title = "Clustering BERT Eembedding via Dot Product (CBERTdp)",
-    url  = "https://github.com/zuliani99/CBERTdp/blob/main/CBERTdp.pdf",
+    url  = "https://github.com/zuliani99/CBERTdp/blob/main/documentations/Project_Report_NLP.pdf",
 }
 ```

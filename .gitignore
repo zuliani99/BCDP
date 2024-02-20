@@ -6,3 +6,4 @@ app/__pycache__/
 *.pt
 *.log
 *.tar
+*.slurm
