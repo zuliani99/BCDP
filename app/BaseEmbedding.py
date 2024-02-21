@@ -25,6 +25,7 @@ class BaseEmbedding(object):
 		self.ds_name_dataloaders = ds_name_dataloaders
   
   
+	# Function to get the base embedding by saving them into a .npy file at  batch of 100
 	def save_base_embeddings(self, model_name):
 		
 		for ds_name, dls in self.ds_name_dataloaders.items():

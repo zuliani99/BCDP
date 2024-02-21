@@ -25,6 +25,7 @@ class Train_Evaluate(object):
         
         self.__save_init_checkpoint()
         
+    # Function to save the initial checkpoint
     def __save_init_checkpoint(self):
         if not os.path.exists(self.init_check_filename):
             print(f' => Saving initial {self.name} checkpoint')
@@ -34,7 +35,7 @@ class Train_Evaluate(object):
         else:
             print(f' => Initial {self.name} checkpoint already present')
 
-    
+    # Fucntion to load the initial chekpoint
     def load_initial_checkpoint(self):
         print(f' => Loading initial {self.name} checkpoint')
         checkpoint = torch.load(self.init_check_filename, map_location=self.device)
@@ -43,16 +44,8 @@ class Train_Evaluate(object):
         print(' DONE\n')
 
 
+    # Save the best model checkpoint along with relevant training information        
     def __save_best_checkpoint(self, filename, actual_patience, epoch, best_val_loss):
-        """ Save the best model checkpoint along with relevant training information.
-
-		@param filename: str, the filename to which the checkpoint should be saved
-		@param actual_patience: int, the current patience value during training
-		@param epoch: int, the current epoch number
-		@param best_val_loss: float, best validation loss achieved during training
-
-		@Return: None
-		"""
         print(f' => Saving best {self.name} checkpoint')
         checkpoint = {'state_dict': self.model.state_dict(), 'optimizer': self.optimizer.state_dict(),
                       'actual_patience': actual_patience, 'epoch': epoch, 'best_val_loss': best_val_loss}
@@ -60,16 +53,8 @@ class Train_Evaluate(object):
         print(' DONE\n')
 
 
-
+    # Load the best model checkpoint from a specified file 
     def __load_best_checkpoint(self, filename):
-        """ Load the best model checkpoint from a specified file 
-
-		@param filename: str, the filename from which to load the model checkpoint
-
-		@Return: tuple [int, int, float] containing the values for actual_patience, epoch and best_val_loss from the loaded checkpoint
-
-		"""
-
         print(f' => Loading {self.name} best checkpoint')
         checkpoint = torch.load(filename, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
@@ -79,17 +64,8 @@ class Train_Evaluate(object):
         return checkpoint['actual_patience'], checkpoint['epoch'], checkpoint['best_val_loss']
   
 
-
-
+    # Evaluate the model's performance on a validation dataset.
     def evaluate(self, val_dl):
-        """Evaluate the model's performance on a validation dataset.
-		@param val_dl: the data loader for the validation dataset
-		@param epoch: int, the current epoch number, default is 0
-		@param epochs: int, the total number of training epochs, default is 0
-
-		@Return: a tuple containing the computed validation accuracy and loss
-
-		"""
   
         val_accuracy, val_loss = .0, .0
 
@@ -115,15 +91,8 @@ class Train_Evaluate(object):
         return val_accuracy, val_loss
     
     
-
-    def test(self, test_dl):
-        """ Evaluate the model's performance on a test dataset and print the results.
-		@param test_dl: the data loader for the test dataset
-
-		@Return: a tuple containing the computed test accuracy and loss
-		
-		"""
-  
+    # Evaluate the model's performance on a test dataset and print the results.
+    def test(self, test_dl):  
         test_accuracy, test_loss = self.evaluate(test_dl)
 
         print('\nTESTING RESULTS -> test_accuracy: {:.6f}, test_loss: {:.6f} \n'.format(test_accuracy, test_loss))
@@ -131,7 +100,7 @@ class Train_Evaluate(object):
         return test_accuracy, test_loss
 
 
-
+    # Fit and evaluate the model for a given train and valdation dataloader
     def fit(self, dataset_name, train_dl, val_dl):
         
         check_best_path = f'{self.check_filename}/{dataset_name}_{self.name}.pth.tar'

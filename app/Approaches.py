@@ -183,11 +183,11 @@ class LayerAggregation(Approaches):
   
 	def get_LayerAggregation_Embeddigns(self, dataloader):
   
-		LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
-		#LA_embeds = np.empty((0, self.embeddings_dim * self.n_layers), dtype=np.float32)		
+		#LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
+		LA_embeds = np.empty((0, self.embeddings_dim * self.n_layers), dtype=np.float32)		
 		
-		LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
-		#LA_labels = np.empty((0), dtype=np.int8)		
+		#LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
+		LA_labels = np.empty((0), dtype=np.int8)		
 
   
 		self.tran_evaluate.model.eval()
@@ -200,14 +200,14 @@ class LayerAggregation(Approaches):
 			
 				_, embeds = self.tran_evaluate.model(bert_embeds)
 
-				LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
-				#LA_embeds = np.vstack((LA_embeds, embeds.detach().cpu().numpy()))
+				#LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
+				LA_embeds = np.vstack((LA_embeds, embeds.detach().cpu().numpy()))
 				
-				LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
-				#LA_labels = np.append(LA_labels, labels.numpy().flatten())
+				#LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
+				LA_labels = np.append(LA_labels, labels.numpy().flatten())
 
-		#return LA_embeds, LA_labels
-		return LA_embeds.cpu().numpy(), LA_labels.cpu().numpy()
+		return LA_embeds, LA_labels
+		#return LA_embeds.cpu().numpy(), LA_labels.cpu().numpy()
 
 
 					 
@@ -225,18 +225,15 @@ class LayerAggregation(Approaches):
 			train_dl, val_dl, test_dl = get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, self.tran_evaluate.batch_size)
 
 			self.tran_evaluate.fit(ds_name, train_dl, val_dl)
-   
-			# we can for eaxample save these metrics to compare with the additional embedding
-			_, _ = self.tran_evaluate.test(test_dl)
-   
+      
 			print(' => Obtaining the Layer Aggregation embeddings:')
 			x_train, y_train = self.get_LayerAggregation_Embeddigns(train_dl)
 			x_val, y_val = self.get_LayerAggregation_Embeddigns(val_dl)
 			x_test, y_test = self.get_LayerAggregation_Embeddigns(test_dl)
 			print(' DONE\n')
    
-			x_train = np.vstack((x_train, x_val))#.astype(np.float32)
-			y_train = np.append(y_train, y_val)#.astype(np.int8)
+			x_train = np.vstack((x_train, x_val))
+			y_train = np.append(y_train, y_val)
    
 			y_train[y_train == 0] = -1
 			y_test[y_test == 0] = -1

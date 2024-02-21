@@ -15,7 +15,7 @@ import os
 import errno
 
 
-
+# Obtain the dataset from huggingface
 def get_datasets():
 	return {
 	 	'imdb': load_dataset('imdb'), 
@@ -23,14 +23,14 @@ def get_datasets():
 		'y_p': load_dataset('yelp_polarity')
 	}
  
- 
-   
+
+# Get the accuracy score from the logits
 def accuracy_score(output, label):
 	output_class = torch.argmax(torch.softmax(output, dim=1), dim=1)
 	return (output_class == label).sum().item()/len(output)
 
 
-
+# Collate ducntion to build the dataset dictionary
 def collate_fn(batch):
 	input_ids = pad_sequence([item[0]['input_ids'] for item in batch], batch_first=True, padding_value=0)
 	attention_mask = pad_sequence([item[0]['attention_mask'] for item in batch], batch_first=True, padding_value=0)
@@ -39,7 +39,7 @@ def collate_fn(batch):
 	return {'input_ids': input_ids, 'attention_mask': attention_mask}, labels
 
 
-
+# Function to write the results into a csv file
 def write_csv(ts_dir, head, values, categoty_type):
 	if (not os.path.exists(f'app/results/{ts_dir}/{categoty_type}_results.csv')):
 		
@@ -54,7 +54,7 @@ def write_csv(ts_dir, head, values, categoty_type):
 		f.close()
 		
 		
-  
+# Function to create the csv results directory
 def create_ts_dir_res(timestamp):
 	
 	mydir = os.path.join('app/results', timestamp) #results
@@ -65,14 +65,14 @@ def create_ts_dir_res(timestamp):
 			raise  # This was not a "directory exist" error..
 		
 
-
+# Function to initialize the models parameters
 def init_params(m):
 	if isinstance(m, nn.Linear):
 		init.normal_(m.weight, std=1e-3)
 		if m.bias is not None: init.constant_(m.bias, 0)        
 
 
-
+# Function to read the embeddinggiven the bese model embedding and the dataset name
 def read_embbedings(dataset_name, base_embeds_model, bool_validation = False):
 
 	path = f'app/embeddings/{base_embeds_model}/{dataset_name}'
@@ -102,8 +102,7 @@ def read_embbedings(dataset_name, base_embeds_model, bool_validation = False):
 		return x_train, x_val, x_test, torch.tensor(y_train, dtype=torch.long), torch.tensor(y_val, dtype=torch.long), torch.tensor(y_test, dtype=torch.long)
 
 
-
-
+# Fucntion to create the dataloaders from the numeric embedding
 def get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_size):
 	train_dl = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
 	val_dl = DataLoader(TensorDataset(x_val, y_val), batch_size=batch_size, shuffle=False)
@@ -111,12 +110,11 @@ def get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, batch_s
 	return train_dl, val_dl, test_dl
 
 
-
+# Function to create the competitors embeddigns
 def get_competitors_embeddings_dls(ds_name, base_embeds_model, batch_size):
 	x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, base_embeds_model, bool_validation=True)
 
 	# we use embedding approach of the main strategy
-	# there were torch.squeeze
 	x_train = torch.unsqueeze(torch.clone(x_train[:,-1,:]), dim=1)
 	x_val = torch.unsqueeze(torch.clone(x_val[:,-1,:]), dim=1)
 	x_test = torch.unsqueeze(torch.clone(x_test[:,-1,:]), dim=1)

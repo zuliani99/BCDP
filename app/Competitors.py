@@ -61,9 +61,6 @@ class Linear(Train_Evaluate):
    
 
 
-
-
-
 class LSTMGRUModel(nn.Module):
 	def __init__(self, hidden_size, num_classes, bidirectional, lstm_gru):
 		super(LSTMGRUModel, self).__init__()

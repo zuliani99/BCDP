@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from utils import collate_fn
 import numpy as np
 
+# Custom text dataset
 class CustomTextDataset(Dataset):
     def __init__(self, vocab, tokenizer):
         self.vocab = vocab
@@ -15,14 +16,6 @@ class CustomTextDataset(Dataset):
         return len(self.vocab)
     
     def __getitem__(self, idx): 
-        """ retrieve a specific item of the dataset
-
-        @param idx: int, the index of the item to be retrieved
-
-        @Return:
-            - a dictionary containing the input-ids and the attention masks
-            - the label associated with the item
-        """
         
         encoding = self.tokenizer.encode_plus(
             self.vocab[idx]['text'] if 'text' in self.vocab[idx] else self.vocab[idx]['sentence'],
@@ -39,7 +32,7 @@ class CustomTextDataset(Dataset):
     
     
     
-    
+# Get the dictionary containing the datloaders from the custom text datssets
 def get_dsname_dataloaders(datasets_dict, tokenizer, batch_size):
 	
 	datalaoders = {}
