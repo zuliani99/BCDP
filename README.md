@@ -42,6 +42,8 @@ optional arguments:
                         Pretreined BERT model from Huggingface
 ```
 
+## Results
+We have uploaded the **.csv** file containig our results for every strategies including baselines, competitors, ablations and of course our approacches, you can see them following this [link](https://github.com/zuliani99/CBERTdp/tree/main/app/results/our_results).
 
 ## Cite Us
 ```
