@@ -29,39 +29,33 @@ class Approaches(object):
        
 		if self.bool_ablations:
 			print(f'--------------- {ds_name} - PCA & TSNE ablations ---------------')
-
-			ablations_dict = {
-				'PCA': { 'method': PCA(n_components=2) },
-				'TSNE': { 'method': TSNE() }
-			}
-    
-	
-			for ab_name, dict_method in ablations_dict.items():
+   
+			pca = PCA(n_components=2)
+			pca_x = {}
        
-				print(f'Running {ab_name} ablations\n')
+			print(f'\nRunning PCA ablations\n')
        
-				path_reduced_embeds = f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/{ab_name}_{method_name}'
-				for str_x, x in [('x_train', x_train), ('x_test', x_test)]:
-					if os.path.exists(f'{path_reduced_embeds}_{str_x}.npy'):
-						print(f' => Loading reduced embeddings {str_x}')
-						dict_method[str_x] = np.load(f'{path_reduced_embeds}_{str_x}.npy')
-						print(' DONE\n')
-					else:
-						print(f' => Running {ab_name} on the embedding of {str_x} - {ds_name} from {method_name}')
-						dict_method[str_x] = dict_method['method'].fit_transform(x)
-						print(' => Saving reduced embeddings:')
-						np.save(f'{path_reduced_embeds}_{str_x}.npy', dict_method[str_x])
-						print(' DONE\n')
+			path_reduced_embeds = f'app/embeddings/{self.base_embeds_model}/{ds_name}/ablations/PCA_{method_name}'
+			for str_x, x in [('x_train', x_train), ('x_test', x_test)]:
+				if os.path.exists(f'{path_reduced_embeds}_{str_x}.npy'):
+					print(f' => Loading reduced embeddings {str_x}')
+					pca_x[str_x] = np.load(f'{path_reduced_embeds}_{str_x}.npy')
+					print(' DONE\n')
+				else:
+					print(f' => Running PCA on the embedding of {str_x} - {ds_name} from {method_name}')
+					pca_x[str_x] = pca.fit_transform(x)
+					print(' => Saving reduced embeddings:')
+					np.save(f'{path_reduced_embeds}_{str_x}.npy', pca_x[str_x])
+					print(' DONE\n')
 
-				print(dict_method['x_train'].shape, dict_method['x_test'].shape)
 
-				self.faiss_kmeans.run_faiss_kmeans(
-        			ds_name,
-           			f'{method_name}_{ab_name}',
-              		self.timestamp,
-                	'our_ablations',
-					(np.copy(dict_method['x_train']), np.copy(dict_method['x_test']), y_train, y_test)
-     			)
+			self.faiss_kmeans.run_faiss_kmeans(
+        		ds_name,
+           		f'{method_name}_PCA',
+              	self.timestamp,
+                'our_ablations',
+				(np.copy(pca_x['x_train']), np.copy(pca_x['x_test']), y_train, y_test)
+     		)
 
 			print('----------------------------------------------------------------\n')
 			
@@ -189,10 +183,11 @@ class LayerAggregation(Approaches):
   
 	def get_LayerAggregation_Embeddigns(self, dataloader):
   
-		#LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
-		LA_embeds = np.empty((0, self.embeddings_dim * self.n_layers), dtype=np.float32)		
-		#LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
-		LA_labels = np.empty((0), dtype=np.int8)		
+		LA_embeds = torch.empty((0, self.embeddings_dim * self.n_layers), dtype=torch.float32, device=self.tran_evaluate.device)		
+		#LA_embeds = np.empty((0, self.embeddings_dim * self.n_layers), dtype=np.float32)		
+		
+		LA_labels = torch.empty((0), device=self.tran_evaluate.device)		
+		#LA_labels = np.empty((0), dtype=np.int8)		
 
   
 		self.tran_evaluate.model.eval()
@@ -201,16 +196,18 @@ class LayerAggregation(Approaches):
 			for bert_embeds, labels in dataloader:
 
 				bert_embeds = bert_embeds.to(self.tran_evaluate.device)
-				#labels = labels.to(self.tran_evaluate.device)
+				labels = labels.to(self.tran_evaluate.device)
 			
 				_, embeds = self.tran_evaluate.model(bert_embeds)
 
-				#LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
-				LA_embeds = np.vstack((LA_embeds, embeds.detach().cpu().numpy()))
-				#LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
-				LA_labels = np.append(LA_labels, labels.numpy().flatten())
+				LA_embeds = torch.cat((LA_embeds, embeds), dim=0)
+				#LA_embeds = np.vstack((LA_embeds, embeds.detach().cpu().numpy()))
+				
+				LA_labels = torch.cat((LA_labels, torch.flatten(labels)))
+				#LA_labels = np.append(LA_labels, labels.numpy().flatten())
 
-		return LA_embeds, LA_labels
+		#return LA_embeds, LA_labels
+		return LA_embeds.cpu().numpy(), LA_labels.cpu().numpy()
 
 
 					 
@@ -223,7 +220,7 @@ class LayerAggregation(Approaches):
 			self.tran_evaluate.load_initial_checkpoint()
 
 			x_train, x_val, x_test, y_train, y_val, y_test = read_embbedings(ds_name, self.base_embeds_model, bool_validation=True)
-      
+
 			# create tensor dataloaders
 			train_dl, val_dl, test_dl = get_text_dataloaders(x_train, x_val, x_test, y_train, y_val, y_test, self.tran_evaluate.batch_size)
 
