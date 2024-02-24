@@ -41,10 +41,10 @@ optional arguments:
 We have uploaded the **.csv** file containig our results for every strategies including baselines, competitors, ablations and of course our approacches, you can see them following this [link](https://github.com/zuliani99/CBERTdp/tree/main/app/results/our_results).
 
 ## Documentatons
-1- [Proposal](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Proposal.pdf): here we give the initial idea of what we wanted to design and how to evaluate it
-2- [Poster](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Poster.pdf): this is the poster that we deliver for a class posters session
-3- [Paper Report](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Paper.pdf): the actual and final paper report of the project
-4- [Presentation](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Presentation.pdf): slides for presenting the work
+1. [Proposal](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Proposal.pdf): here we give the initial idea of what we wanted to design and how to evaluate it
+2. [Poster](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Poster.pdf): this is the poster that we deliver for a class posters session
+3. [Paper Report](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Paper.pdf): the actual and final paper report of the project
+4. [Presentation](https://github.com/zuliani99/CBERTdp/blob/main/documentations/CBERTdp_Presentation.pdf): slides for presenting the work
 
 ## Cite Us
 ```
